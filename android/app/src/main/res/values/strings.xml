@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Lively</string>
+    <string name="title_activity_main">Lively</string>
+    <string name="package_name">com.lively.life</string>
+    <string name="custom_url_scheme">com.lively.life</string>
+    <color name="colorAccent">#1395ff</color>
+    <color name="colorPrimaryDark">#000</color>
+    <color name="colorPrimary">#FAFAFA</color>
+</resources>

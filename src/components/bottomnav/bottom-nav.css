@@ -1,0 +1,22 @@
+#bottom-nav{
+    padding: 12.5px 0;
+    height: 30px;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    background: #fafafacc;
+    display: flex;
+    z-index: 5;
+}
+
+.bottom-nav-image-holder{
+    flex: 1;
+    text-align: center;
+    z-index: 8;
+}
+
+.bottom-nav-image-holder img{
+    width: 25px;
+    height: 25px;
+    vertical-align: middle;
+}

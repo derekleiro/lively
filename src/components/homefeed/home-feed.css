@@ -1,0 +1,9 @@
+#settings-link{
+    position: absolute;
+    right: 20px;
+}
+
+#settings-link img{
+    width: 25px;
+    height: 25px;
+}

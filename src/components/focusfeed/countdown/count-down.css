@@ -1,0 +1,15 @@
+#ambience{
+    margin: 25px auto;
+    text-align: center;
+    border: solid 1px grey;
+    width: 150px;
+    padding: 10px;
+    border-radius: 35px;
+}
+
+#ambience_photo img{
+    width: 25px;
+    height: 25px;
+    vertical-align: middle;
+    margin: 0 5px;
+}

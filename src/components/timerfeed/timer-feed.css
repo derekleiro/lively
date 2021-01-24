@@ -1,0 +1,21 @@
+.top_highlight_contain{
+    padding-bottom: 25px;
+}
+
+.top_highlights{
+    display: flex; 
+    margin-top: 15px;   
+}
+
+._highlight{
+    flex: 1;
+}
+
+._highlight:last-child{
+    text-align: right;
+}
+
+._value{
+    margin-bottom: 10px;
+    color: #1395ff;
+}

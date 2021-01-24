@@ -1,0 +1,15 @@
+.category {
+    margin-top: 100px;
+}
+
+.category_select {
+    width: auto;
+    outline: 0;
+    background: transparent;
+    font-family: "Poppins", sans-serif;
+    padding: 7.5px 40px 7.5px 15px;
+    height: 30px;
+    max-height: 300px;
+    overflow: auto;
+    border-radius: 35px;
+}

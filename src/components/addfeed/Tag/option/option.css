@@ -1,0 +1,30 @@
+.option {
+    padding: 5px 0;
+    display: flex;
+}
+
+.option_container{
+    flex: 1;
+}
+
+.option_image{
+    flex: 0;
+    vertical-align: middle;
+    margin-left: 10px;
+    width: 20px;
+    height: 20px;
+}
+
+.option_image_selected{
+    flex: 0;
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+}
+
+.option_image_selected_right{
+    flex: 0;
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+}

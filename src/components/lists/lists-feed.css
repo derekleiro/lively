@@ -1,0 +1,38 @@
+.list-container{
+    display: flex;
+    align-items: center;
+    margin: 10px 0px;
+    padding: 12.5px 0;
+    border-radius: 35px;
+}
+
+.list-container:last-child{
+    box-shadow: 0;
+}
+
+.list-color{
+    padding: 10px 0;
+    border-radius: 100%;
+    margin-right: 25px;
+    flex: 1;
+}
+
+.list-content{
+    flex: 20;
+    margin: 0 7.5px;
+}
+
+.list-color img{
+    width: 25px;
+    height: 25px;
+}
+
+.list-end{
+    flex: 1;
+}
+
+.list-end img{
+    width: 20px;
+    height: 20px;
+    text-align: right;
+}

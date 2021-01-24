@@ -1,0 +1,30 @@
+.done{
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    overflow: auto;
+    background: transparent;
+}
+
+.done_alt{
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    background: transparent;
+    margin-top: 50px;
+}
+
+.done_options{
+    margin: 0 auto;
+    text-align: center;
+    font-size: 14px;
+}
+
+.done_text{
+    margin: 10px 25px;
+}

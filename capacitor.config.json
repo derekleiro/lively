@@ -1,0 +1,19 @@
+{
+    "appId": "com.lively.life",
+    "appName": "Lively",
+    "bundledWebRuntime": false,
+    "npmClient": "npm",
+    "webDir": "build",
+    "plugins": {
+        "SplashScreen": {
+            "backgroundColor": "#000",
+            "androidSplashResourceName": "splash_background"
+        },
+        "LocalNotifications": {
+            "smallIcon": "icon",
+            "iconColor": "#1395ff",
+            "sound": "beep.mp3"
+        }
+    },
+    "cordova": {}
+}

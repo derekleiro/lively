@@ -1,0 +1,76 @@
+.text_bar{
+    margin: 25px 0 0 0;
+}
+
+.text_bar_todo{
+    width: auto;
+    word-wrap: break-word;
+    background: transparent;
+    padding: 12.5px 15px;
+    border-radius: 35px;
+    border: solid 1px #f0f0f0;
+}
+
+.textarea_container{
+    display: flex;
+    align-items: center;
+}
+
+.text_bar_plus_icon_top{
+    position: absolute;
+    right: 30px;
+}
+
+.text_bar_plus_icon_top img{
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+.text_bar_plus_icon{
+    position: absolute;
+    left: 20px;
+    margin-top: 10px;
+}
+
+.text_bar_plus_icon img{
+    width: 25px;
+    height: 25px;
+    vertical-align: middle;
+}
+
+.text_bar_textarea{
+    outline: 0;
+    border: solid 1px #f0f0f0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    background: transparent;
+    font-family: "Poppins", sans-serif;
+    padding: 12.5px 40px 12.5px 15px;
+    max-height: 250px;
+    resize: none;
+    border-radius: 35px;
+    color: black;
+}
+
+.text_bar_step_textarea{
+    outline: 0;
+    box-shadow: 0;
+    border: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    background: transparent;
+    font-family: "Poppins", sans-serif;
+    margin-top: 0;
+    max-height: 250px;
+    resize: none;
+    border-radius: 0;
+    color: black;
+}
+
+.textarea_steps{
+    margin-top: 15px;
+    cursor: pointer;
+}

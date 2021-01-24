@@ -1,0 +1,72 @@
+.card{
+    display: flex;
+    margin: 35px 0;
+}
+
+.card-completed{
+    flex: 0;
+    margin-right: 10px;
+}
+
+.card-completed img{
+    width: 20px;
+    height: 20px;
+}
+
+.card-checkbox{
+    padding: 5px;
+}
+
+.card-content{
+    flex: 9;
+    margin: 0 7.5px;
+}
+
+.card-desc{
+    word-wrap: break-word;
+}
+
+.card-due-date{
+    line-height: 2em;
+    margin-top: 5px;
+    color: #1395ff;
+    word-wrap: break-word;
+}
+
+/* #7dbaec Nice blue color*/
+
+.card-due-section{
+    margin-right: 10px;
+}
+
+.card-info-img{
+    width: 17.5px;
+    height: 17.5px;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+.start_focus{
+    color: grey;
+    padding-bottom: 3px
+}
+
+.start_focus img{
+    margin: 0 2.5px;
+    width: 15px;
+    height: 15px;
+    vertical-align: middle;
+}
+
+.card-star{
+    text-align: right;
+    flex: 0;
+    margin-left: 10px;
+}
+
+.card-star img{
+    width: 20px;
+    margin-top: 2px;
+    vertical-align: middle;
+    height: 20px;
+}

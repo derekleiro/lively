@@ -1,0 +1,146 @@
+body {
+    font-family: "Poppins", sans-serif;
+    padding: 0;
+    margin: 0;
+    background: #000;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none; /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none;
+    font-size: 14px;
+    position: relative;
+    cursor: default !important;
+    transition: all ease-in-out 400ms;
+}
+
+a {
+    text-decoration: none;
+    color: #1395ff;
+}
+
+#app {
+    height: 100%;
+    width: 100%;
+    background: #000;
+    position: fixed;
+    top: 0;
+    overflow: auto;
+}
+
+:focus {
+    outline: 0 !important;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+    display: none;
+    cursor: pointer;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    transition: ease-in-out all 400ms;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+    transition: ease-in-out all 400ms;
+}
+
+.page {
+    margin: 25px 0 100px 0;
+    transition: opacity ease-in-out 400ms;
+    opacity: 0;
+}
+
+.container {
+    padding: 0 20px;
+    position: relative;
+}
+
+.container_top_nav {
+    position: fixed;
+    width: 100%;
+    top: 20px;
+    height: 45px;
+    left: 0;
+    z-index: 10;
+    padding-top: 5px;
+}
+
+.back_icon {
+    margin-right: 15px;
+    margin-left: 20px;
+}
+
+.back_icon img {
+    width: 20px;
+    height: 20px;
+}
+
+.space {
+    margin-top: 75px;
+}
+
+.switch-wrapper {
+    position: relative;
+}
+
+.switch-wrapper > div {
+    position: absolute;
+}
+
+textarea {
+    font-size: 12px;
+    color: grey;
+}
+
+input[type="checkbox"] {
+    border-radius: 100%;
+    width: 20px;
+    height: 20px;
+    border: solid 1px #000;
+    appearance: none;
+    outline: 0;
+}
+
+input[type="checkbox"]:checked {
+    border-radius: 100%;
+    width: 20px;
+    height: 20px;
+    border: solid 1px #1395ff;
+    appearance: none;
+    background: #1395ff;
+    outline: 0;
+}
+
+.title {
+    font-size: 18px;
+    font-family: "Poppins Bold", sans-serif;
+    font-weight: 100;
+    transition: all ease-in-out 400ms;
+}
+
+.scroll-content {
+    padding-bottom: 0 !important;
+}
+
+/* #7dbaec Nice blue color*/
+
+/*
+? really dope box-shadow
+ boxShadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+        0 6.7px 5.3px rgba(0, 0, 0, 0.048),
+        0 12.5px 10px rgba(0, 0, 0, 0.06),
+        0 22.3px 17.9px rgba(0, 0, 0, 0.072),
+        0 41.8px 33.4px rgba(0, 0, 0, 0.086),
+        0 100px 80px rgba(0, 0, 0, 0.12);
+
+        */
