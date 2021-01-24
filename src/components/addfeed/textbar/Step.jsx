@@ -28,7 +28,9 @@ const Step = (props) => {
     const switch_to_add = useSelector((state) => state.addfeed_switch);
     const home_todos = useSelector((state) => state.todos.todos);
     const goals_state = useSelector((state) => state.goals.goals);
-    const completed_goals_state = useSelector((state) => state.completed_goals.completed);
+    const completed_goals_state = useSelector(
+        (state) => state.completed_goals.completed
+    );
     const back_index = useSelector((state) => state.back_index);
     const todo_steps_state = useSelector((state) => state.todo_steps.steps);
 
@@ -72,7 +74,7 @@ const Step = (props) => {
                     }
                 });
         } else if (switch_to_add === "goal_") {
-            if(goals_state.length !== 0){
+            if (goals_state.length !== 0) {
                 dispatch(
                     goal_edit({
                         steps: {
@@ -190,15 +192,13 @@ const Step = (props) => {
             setEdit(false);
             setSecondEdit(true);
 
-            if(home_todos.length !== 0){
-                dispatch(
-                    todo_edit_step({
-                        text,
-                        index: props.index,
-                        complete: 0,
-                    })
-                );
-            }
+            dispatch(
+                todo_edit_step({
+                    text,
+                    index: props.index,
+                    complete: 0,
+                })
+            );
 
             edit_steps({ text, id: props.id, complete: 0 }, true);
         } else if (text.trim() !== "") {
@@ -207,7 +207,7 @@ const Step = (props) => {
 
             setEdit(false);
 
-            if(home_todos.length !== 0){
+            if (home_todos.length !== 0) {
                 dispatch(
                     todo_edit_step({
                         text,

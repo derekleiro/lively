@@ -6,7 +6,8 @@
     "webDir": "build",
     "plugins": {
         "SplashScreen": {
-            "backgroundColor": "#000"
+            "backgroundColor": "#000",
+            "androidSplashResourceName": "splash_background"
         },
         "LocalNotifications": {
             "smallIcon": "icon",

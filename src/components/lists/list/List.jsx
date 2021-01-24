@@ -10,6 +10,9 @@ import edit from "../../../assets/icons/edit.png";
 import edit_light from "../../../assets/icons/edit_light.png";
 import edit_complete from "../../../assets/icons/edit_complete.png";
 import edit_complete_light from "../../../assets/icons/edit_complete_light.png";
+import cancel_icon from "../../../assets/icons/back.png";
+import cancel_icon_light from "../../../assets/icons/back_light.png";
+
 import {
     lists_dispatch,
     list_edit,
@@ -112,7 +115,7 @@ const List = (props) => {
                     })
                 );
             }
-        }else{
+        } else {
             props.handleEditBlank();
             setEdit(false);
         }
@@ -276,7 +279,11 @@ const List = (props) => {
                             >
                                 <img
                                     src={
-                                        darkMode
+                                        !text
+                                            ? darkMode
+                                                ? cancel_icon_light
+                                                : cancel_icon
+                                            : darkMode
                                             ? edit_complete_light
                                             : edit_complete
                                     }
@@ -289,7 +296,15 @@ const List = (props) => {
                                 onClick={props.adding ? null : handleEdit}
                             >
                                 <img
-                                    src={darkMode ? edit_light : edit}
+                                    src={
+                                        !text
+                                            ? darkMode
+                                                ? cancel_icon_light
+                                                : cancel_icon
+                                            : darkMode
+                                            ? edit_light
+                                            : edit
+                                    }
                                     alt={text}
                                 />
                             </span>

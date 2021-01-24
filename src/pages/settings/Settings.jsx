@@ -533,8 +533,15 @@ const Settings = () => {
                     >
                         This project is OpenSource on{" "}
                         {/* TODO: Add Github link here when project is deployed  */}
-                        Github . You can contribute to it. If you appreciate
-                        this work, consider donating above. Thank you!
+                        <a
+                            href="https://github.com/derekleiro/lively"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Github
+                        </a>{" "}
+                        . You can contribute to it. If you appreciate this work,
+                        consider donating above. Thank you!
                     </div>
 
                     <div

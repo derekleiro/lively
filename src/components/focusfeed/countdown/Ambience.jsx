@@ -14,7 +14,6 @@ const sound = new Howl({
     src: [ambient_sound],
     loop: true,
     preload: true,
-    html5: true,
     sprite: {
         rain: [0, 7000],
     },

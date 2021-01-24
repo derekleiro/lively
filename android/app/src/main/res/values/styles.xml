@@ -8,6 +8,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name ="android:windowBackground">@color/colorPrimaryDark</item>
+        <item name="android:navigationBarDividerColor">@color/colorPrimary</item>
     </style>
 
     <style name="SplashScreen" parent="Theme.AppCompat.Light.NoActionBar">

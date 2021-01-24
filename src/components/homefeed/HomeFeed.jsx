@@ -490,7 +490,7 @@ const HomeFeed = () => {
                                     : "0",
                             }}
                         >
-                            Earlier
+                            Earlier 
                             <span
                                 style={{ margin: `0 5px`, ...style }}
                                 dangerouslySetInnerHTML={{ __html: `&#8226;` }}

@@ -260,7 +260,7 @@ const App = () => {
 
         dispatchMode();
 
-        // persistentNotification();
+        persistentNotification();
 
         const app_starts = JSON.parse(localStorage.getItem("app_starts"));
         localStorage.setItem("app_starts", app_starts ? app_starts + 1 : 1);

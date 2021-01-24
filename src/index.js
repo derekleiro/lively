@@ -8,7 +8,10 @@ import { HashRouter as Router } from "react-router-dom";
 import App from "./App";
 import allReducers from "./reducers";
 
-const store = createStore(allReducers); // pass in reducers
+const store = createStore(
+    allReducers,
+    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+); // pass in reducers
 
 ReactDOM.render(
     <div style={{ background: "#000" }}>
