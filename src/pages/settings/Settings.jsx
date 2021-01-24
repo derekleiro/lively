@@ -532,7 +532,6 @@ const Settings = () => {
                         style={{ marginTop: "15px", marginBottom: "20px" }}
                     >
                         This project is OpenSource on{" "}
-                        {/* TODO: Add Github link here when project is deployed  */}
                         <a
                             href="https://github.com/derekleiro/lively"
                             target="_blank"
