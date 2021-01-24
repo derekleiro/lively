@@ -46,6 +46,5 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
-        <uses-permission android:name="android.permission.BILLING" />
     </application>
 </manifest>

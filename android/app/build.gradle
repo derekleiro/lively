@@ -25,10 +25,12 @@ repositories {
 }
 
 dependencies {
+    def billing_version = "3.0.0"
+    
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
-    implementation platform('com.google.firebase:firebase-bom:26.2.0')
     implementation project(':capacitor-android')
+    implementation "com.android.billingclient:billing:$billing_version"
     implementation project(':capacitor-cordova-android-plugins')
 }
 

@@ -25,13 +25,15 @@ public class NavigationBar extends Plugin {
     getActivity().runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
           decorView.setSystemUiVisibility(visibilityFlags & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
           window.setNavigationBarColor(parsedColor);
         }
 
-        window.setStatusBarColor(parsedColor);
-        decorView.setSystemUiVisibility(visibilityFlags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+          window.setStatusBarColor(parsedColor);
+          decorView.setSystemUiVisibility(visibilityFlags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
       }
     });
   }
@@ -47,13 +49,15 @@ public class NavigationBar extends Plugin {
     getActivity().runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-          decorView.setSystemUiVisibility(visibilityFlags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+          decorView.setSystemUiVisibility(visibilityFlags | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
           window.setNavigationBarColor(parsedColor);
         }
 
-        window.setStatusBarColor(parsedColor);
-        decorView.setSystemUiVisibility(visibilityFlags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+          window.setStatusBarColor(parsedColor);
+          decorView.setSystemUiVisibility(visibilityFlags | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
       }
     });
   }
