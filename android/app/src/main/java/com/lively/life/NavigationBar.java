@@ -20,19 +20,19 @@ public class NavigationBar extends Plugin {
     final int parsedColor = Color.parseColor("black");
 
     View decorView = window.getDecorView();
-    int visibilityFlags = decorView.getSystemUiVisibility();
+    final int[] visibilityFlags = {decorView.getSystemUiVisibility()};
 
     getActivity().runOnUiThread(new Runnable() {
       @Override
       public void run() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-          decorView.setSystemUiVisibility(visibilityFlags & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+          decorView.setSystemUiVisibility(visibilityFlags[0] &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
           window.setNavigationBarColor(parsedColor);
         }
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
           window.setStatusBarColor(parsedColor);
-          decorView.setSystemUiVisibility(visibilityFlags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+          decorView.setSystemUiVisibility(visibilityFlags[0] &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
       }
     });
@@ -44,19 +44,20 @@ public class NavigationBar extends Plugin {
     final int parsedColor = Color.parseColor("#FAFAFA");
 
     View decorView = window.getDecorView();
-    int visibilityFlags = decorView.getSystemUiVisibility();
+    final int[] visibilityFlags = {decorView.getSystemUiVisibility()};
+    
 
     getActivity().runOnUiThread(new Runnable() {
       @Override
       public void run() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-          decorView.setSystemUiVisibility(visibilityFlags | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+          decorView.setSystemUiVisibility(visibilityFlags[0] |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
           window.setNavigationBarColor(parsedColor);
         }
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
           window.setStatusBarColor(parsedColor);
-          decorView.setSystemUiVisibility(visibilityFlags | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+          decorView.setSystemUiVisibility(visibilityFlags[0] |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
       }
     });

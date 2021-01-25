@@ -69,7 +69,14 @@ const sound = new Howl({
 });
 
 const App = () => {
-    const { LocalNotifications, Toast, NavigationBar, SplashScreen } = Plugins;
+    const {
+        LocalNotifications,
+        Toast,
+        NavigationBar,
+        SplashScreen,
+        Device,
+    } = Plugins;
+
     const dispatch = useDispatch();
     const history = useHistory();
     const darkMode = useSelector((state) => state.dark_mode);
@@ -127,14 +134,34 @@ const App = () => {
         todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
     });
 
-    const androidLightTheme = () => {
+    const androidLightTheme = async () => {
         NavigationBar.setLightColor();
-        window.RecentsControl.setOptions(mode.light, "Lively");
+        
+        await Device.requestPermissions().then(async () => {
+            const device = await Device.getInfo();
+
+            if (
+                device.osVersion !== "5.0" ||
+                device.osVersion !== "5.0.2"
+            ) {
+                window.RecentsControl.setOptions(mode.light, "Lively");
+            }
+        });
     };
 
-    const androidDarkTheme = () => {
+    const androidDarkTheme = async () => {
         NavigationBar.setDarkColor();
-        window.RecentsControl.setOptions(mode.dark, "Lively");
+        await Device.requestPermissions().then(async () => {
+            const device = await Device.getInfo();
+
+            if (
+                device.osVersion !== "5.0" ||
+                device.osVersion !== "5.0.2"
+            ) {
+                window.RecentsControl.setOptions(mode.dark, "Lively");
+            }
+        });
+        
     };
 
     const persistentNotification = async () => {
@@ -152,6 +179,20 @@ const App = () => {
                     autoCancel: true,
                 },
             ],
+        });
+    };
+
+    const notify = async () => {
+        await Device.requestPermissions().then(async () => {
+            const device = await Device.getInfo();
+
+            if (
+                device.osVersion !== "5.0" ||
+                device.osVersion !== "5.1.1" ||
+                device.osVersion !== "5.0.2"
+            ) {
+                persistentNotification();
+            }
         });
     };
 
@@ -175,6 +216,7 @@ const App = () => {
                 localStorage.setItem("app_starts", 0);
                 localStorage.setItem("donation_modal_shown", false);
                 localStorage.setItem("rate_modal_shown", false);
+                localStorage.setItem("member", false);
 
                 await LocalNotifications.requestPermission().then(async () => {
                     if (isPlatform("android") || isPlatform("ios")) {
@@ -260,7 +302,9 @@ const App = () => {
 
         dispatchMode();
 
-        persistentNotification();
+        if (isPlatform("android")) {
+            notify();
+        }
 
         const app_starts = JSON.parse(localStorage.getItem("app_starts"));
         localStorage.setItem("app_starts", app_starts ? app_starts + 1 : 1);
@@ -405,8 +449,12 @@ const App = () => {
                     } else {
                         if (!focus_ongoing) {
                             dispatch(focus_info(data.notification.extra));
-                            history.replace(
-                                `/focus_${data.notification.extra.tag_id}`
+                            setTimeout(
+                                () =>
+                                    history.replace(
+                                        `/focus_${data.notification.extra.tag_id}`
+                                    ),
+                                2500
                             );
                         }
                     }
@@ -420,7 +468,7 @@ const App = () => {
 
         action();
 
-        SplashScreen.hide()
+        SplashScreen.hide();
     }, [dispatch, darkMode]);
 
     return (

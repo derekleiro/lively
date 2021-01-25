@@ -356,7 +356,7 @@ const HomeFeed = () => {
                                             rateButtonLabel: "Let's goo!",
                                         },
                                     };
-                                    AppRate.promptForRating();
+                                    AppRate.promptForRating(true);
                                     setShowModalReview(false);
                                 }}
                             >

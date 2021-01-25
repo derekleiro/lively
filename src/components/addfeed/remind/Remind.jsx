@@ -158,7 +158,6 @@ const Remind = () => {
     const handleReminderSet = async () => {
         if (notif_warn === 0 || notif_warn === null) {
             setPrompt(true);
-            localStorage.setItem("notif_warning", 1);
         }
 
         setSelected(
@@ -280,16 +279,32 @@ const Remind = () => {
                 >
                     I understand
                 </span>
+
                 <span
                     className="action_button"
                     style={{
-                        margin: "0 30px",
+                        margin: "15px 30px",
                         color: "#1395ff",
                     }}
                     onClick={() => setPrompt(false)}
                 >
                     How to solve this?
                 </span>
+                <div style={{marginTop: "10px"}}>
+                    <span
+                        className="action_button"
+                        style={{
+                            margin: "15px 30px",
+                            color: "#1395ff",
+                        }}
+                        onClick={() => {
+                            setPrompt(false);
+                            localStorage.setItem("notif_warning", 1);
+                        }}
+                    >
+                        Don't show again
+                    </span>
+                </div>
             </div>
         </Done>
     );
@@ -416,7 +431,7 @@ const Remind = () => {
                                         ? "red"
                                         : "grey",
                                 textAlign: "right",
-                                marginRight: "7.5px"
+                                marginRight: "7.5px",
                             }}
                             onClick={
                                 selectHour &&

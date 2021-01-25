@@ -22,14 +22,25 @@ import { remove_doantion_modal } from "../../actions/home_feed";
 const Settings = () => {
     const { Share } = Plugins;
 
+    const DONATION_IDS = [
+        "1_donation",
+        "3_donation",
+        "10_donation",
+        "30_donation",
+        "100_donation",
+        "2_member",
+    ];
+
     const dispatch = useDispatch();
     const history = useHistory();
     const donation_section = useRef(null);
 
     const darkMode = useSelector((state) => state.dark_mode);
     const donation_modal = useSelector((state) => state.donation_modal);
+    const is_member = JSON.parse(localStorage.getItem("member"));
 
     const [fade, setFade] = useState(false);
+    const [products, setProducts] = useState([]);
     const [purchaseError, setPurchaseError] = useState(false);
 
     const style = {
@@ -58,7 +69,7 @@ const Settings = () => {
             text:
                 "Lively is an Ad-free Opensource, Todo & Goals list, Focus & Productivity app",
             url:
-                "https://play.google.com/store/apps/details?id=com.lively.life",
+                "https://play.google.com/store/apps/details?id=com.lively.life", // TODO Change this later to also include iOS app store id
             dialogTitle: "Take charge of your life today!",
         });
     };
@@ -79,33 +90,38 @@ const Settings = () => {
             },
         };
 
-        AppRate.promptForRating();
+        AppRate.promptForRating(true);
     };
 
     const registerItems = async () => {
         Store.register({
-            id: "4636879632684710377",
-            type: Store.NON_CONSUMABLE,
+            id: DONATION_IDS[0],
+            type: Store.CONSUMABLE,
         });
 
         Store.register({
-            id: "4637282709189258831",
-            type: Store.NON_CONSUMABLE,
+            id: DONATION_IDS[1],
+            type: Store.CONSUMABLE,
         });
 
         Store.register({
-            id: "4636871259449741312",
-            type: Store.NON_CONSUMABLE,
+            id: DONATION_IDS[2],
+            type: Store.CONSUMABLE,
         });
 
         Store.register({
-            id: "4637540462936000632",
-            type: Store.NON_CONSUMABLE,
+            id: DONATION_IDS[3],
+            type: Store.CONSUMABLE,
         });
 
         Store.register({
-            id: "4636639358133357006",
-            type: Store.NON_CONSUMABLE,
+            id: DONATION_IDS[4],
+            type: Store.CONSUMABLE,
+        });
+
+        Store.register({
+            id: DONATION_IDS[5],
+            type: Store.PAID_SUBSCRIPTION,
         });
 
         Store.refresh();
@@ -126,6 +142,10 @@ const Settings = () => {
         Store.when("product")
             .approved((product) => {
                 product.verify();
+                if (id === DONATION_IDS[5]) {
+                    localStorage.setItem("member", true);
+                }
+                setPurchaseError(false);
                 return history.replace("/thanks");
             })
             .verified((product) => {
@@ -137,7 +157,13 @@ const Settings = () => {
 
     useEffect(() => {
         let unmounted = false;
-        registerItems();
+        registerItems().then(() => {
+            Store.ready(() => {
+                if (products.length === 0) {
+                    setProducts(Store.products);
+                }
+            });
+        });
 
         setTimeout(() => {
             if (!unmounted) {
@@ -242,7 +268,7 @@ const Settings = () => {
 
                     <div className="element">
                         <span className="text" style={{ flex: "1" }}>
-                            Know someone who might need this app? 🐱‍🏍
+                            Know someone who might need this app? 🐱‍
                         </span>
                         <span
                             style={{
@@ -322,127 +348,60 @@ const Settings = () => {
                             that I am alone, also have school, so just hang in
                             there! I will try my best)
                         </div>
-                        <div className="element">
-                            <span className="text" style={{ flex: "1" }}>
-                                1 Fries{" "}
-                                <span
-                                    role="img"
-                                    aria-label="jsx-a11y/accessible-emoji"
-                                >
-                                    🍟
-                                </span>
-                            </span>
-                            <span style={{ flex: "1", textAlign: "right" }}>
-                                <span
-                                    style={{ color: "1395ff" }}
-                                    onClick={() =>
-                                        handleDonation("4636879632684710377")
-                                    }
-                                >
-                                    Donate $ 0.99
-                                </span>
-                            </span>
-                        </div>
-                        <div className="element">
-                            <span className="text" style={{ flex: "1" }}>
-                                Cup of coffee{" "}
-                                <span
-                                    role="img"
-                                    aria-label="jsx-a11y/accessible-emoji"
-                                >
-                                    ☕
-                                </span>
-                            </span>
-                            <span style={{ flex: "1", textAlign: "right" }}>
-                                <span
-                                    style={{ color: "1395ff" }}
-                                    onClick={() =>
-                                        handleDonation("4637282709189258831")
-                                    }
-                                >
-                                    Donate $ 2.99
-                                </span>
-                            </span>
-                        </div>
-                        <div className="element">
-                            <span className="text" style={{ flex: "1" }}>
-                                Fancy lunch here in Kenya{" "}
-                                <span
-                                    role="img"
-                                    aria-label="jsx-a11y/accessible-emoji"
-                                >
-                                    🥙
-                                </span>
-                            </span>
-                            <span style={{ flex: "1", textAlign: "right" }}>
-                                <span
-                                    style={{ color: "1395ff" }}
-                                    onClick={() =>
-                                        handleDonation("4636871259449741312")
-                                    }
-                                >
-                                    Donate $ 9.99
-                                </span>
-                            </span>
-                        </div>
-                        <div className="element">
-                            <span className="text" style={{ flex: "1" }}>
-                                A gracious thank you{" "}
-                                <span
-                                    role="img"
-                                    aria-label="jsx-a11y/accessible-emoji"
-                                >
-                                    ❤
-                                </span>
-                            </span>
-                            <span style={{ flex: "1", textAlign: "right" }}>
-                                <span
-                                    style={{ color: "1395ff" }}
-                                    onClick={() =>
-                                        handleDonation("4637540462936000632")
-                                    }
-                                >
-                                    Donate $ 29.99
-                                </span>
-                            </span>
-                        </div>
-                        <div className="element">
-                            <span className="text" style={{ flex: "1" }}>
-                                Keep project going!{" "}
-                                <span
-                                    role="img"
-                                    aria-label="jsx-a11y/accessible-emoji"
-                                >
-                                    🚀
-                                </span>
-                            </span>
-                            <span style={{ flex: "1", textAlign: "right" }}>
-                                <span
-                                    style={{ color: "1395ff" }}
-                                    onClick={() =>
-                                        handleDonation("4636639358133357006")
-                                    }
-                                >
-                                    Donate $ 99
-                                </span>
-                            </span>
-                        </div>
-                        <div className="element">
-                            <span className="text" style={{ flex: "2" }}>
-                                Member{" "}
-                                <span
-                                    role="img"
-                                    aria-label="jsx-a11y/accessible-emoji"
-                                >
-                                    🦾
-                                </span>
-                            </span>
-                            <span style={{ flex: "1", textAlign: "right" }}>
-                                <span style={{ color: "1395ff" }}>
-                                    Donate $ 1.99 monthly
-                                </span>
-                            </span>
-                        </div>
+                        {products.map((product, index) => {
+                            return (
+                                <div className="element" key={index}>
+                                    <span
+                                        className="text"
+                                        style={{ flex: "1" }}
+                                    >
+                                        {product.title}
+                                    </span>
+                                    <span
+                                        style={{
+                                            flex: "1",
+                                            textAlign: "right",
+                                        }}
+                                    >
+                                        <span
+                                            style={{ color: "1395ff" }}
+                                            onClick={() => {
+                                                if (index === 5) {
+                                                    if (!is_member) {
+                                                        handleDonation(
+                                                            DONATION_IDS[index]
+                                                        );
+                                                    } else {
+                                                        return null;
+                                                    }
+                                                } else {
+                                                    handleDonation(
+                                                        DONATION_IDS[index]
+                                                    );
+                                                }
+                                            }}
+                                        >
+                                            {index === 5 ? (
+                                                <>
+                                                    {!is_member ? (
+                                                        <>
+                                                            Donate{" "}
+                                                            {product.price}{" "}
+                                                            monthly
+                                                        </>
+                                                    ) : (
+                                                        "Proud member 😎"
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <>Donate {product.price} </>
+                                            )}
+                                        </span>
+                                    </span>
+                                </div>
+                            );
+                        })}
+
                         <div className="element">
                             <span className="text" style={{ flex: "3" }}>
                                 I have an issue/suggestion
@@ -551,7 +510,7 @@ const Settings = () => {
                             color: "grey",
                         }}
                     >
-                        Lively v1.06 build #6
+                        Lively v1.07 build #7
                     </div>
                 </div>
             </div>
