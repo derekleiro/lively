@@ -33,3 +33,14 @@ export const DonationMemberReducer = (state = 0, action) => {
             return state;
     }
 };
+
+export const BatteryOptimisationsReducer = (state = 0, action) => {
+    switch (action.type) {
+        case "SET_BATTERY_OPT":
+            return (state = state + 1);
+        case "RESET_BATTERY_OPT":
+            return (state = 0);
+        default:
+            return state;
+    }
+};

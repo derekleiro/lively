@@ -78,6 +78,7 @@ import {
     TimerHeightReducer,
 } from "./scroll_height";
 import {
+    BatteryOptimisationsReducer,
     DonationItemsReducer,
     DonationMemberReducer,
     DonationReducer,
@@ -150,6 +151,7 @@ const allReducers = combineReducers({
     donation_modal: DonationReducer,
     donation: DonationItemsReducer,
     is_member: DonationMemberReducer,
+    battery_opt: BatteryOptimisationsReducer,
 });
 
 export default allReducers;

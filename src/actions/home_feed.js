@@ -24,3 +24,11 @@ export const set_donation_member = {
 export const reset_donation_member = {
     type: "RESET_DONATION_MEMBER",
 };
+
+export const set_battery_opt = {
+    type: "SET_BATTERY_OPT",
+};
+
+export const reset_battery_opt = {
+    type: "RESET_BATTERY_OPT",
+};

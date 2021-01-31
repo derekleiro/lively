@@ -64,6 +64,8 @@ import { encouragements } from "./constants/encouragements";
 import ThankYou from "./pages/thank_you/ThankYou";
 import {
     dispatch_donation_items,
+    reset_battery_opt,
+    set_battery_opt,
     set_donation_member,
 } from "./actions/home_feed";
 
@@ -187,7 +189,7 @@ const App = () => {
                     (result) => {
                         console.log("Has permissions: ", result);
                     },
-                    (rejected) => {
+                    (no_permission) => {
                         AndroidPermissions.requestPermission(
                             AndroidPermissions.PERMISSION.READ_PHONE_STATE
                         );
@@ -196,6 +198,22 @@ const App = () => {
             },
             (rejected) => {
                 console.log("Could not get permission");
+            }
+        );
+    };
+
+    const handleBatteryOptimisations = async () => {
+        window.cordova.plugins.DozeOptimize.IsIgnoringBatteryOptimizations(
+            (response) => {
+                console.log("IsIgnoringBatteryOptimizations: " + response);
+                if (response == "false") {
+                    dispatch(reset_battery_opt);
+                } else {
+                    dispatch(set_battery_opt);
+                }
+            },
+            (error) => {
+                console.error("IsIgnoringBatteryOptimizations Error" + error);
             }
         );
     };
@@ -350,9 +368,11 @@ const App = () => {
 
         dispatchMode();
 
+        notify();
+
         if (isPlatform("android")) {
             handleAndroidPerms();
-            notify();
+            handleBatteryOptimisations();
         }
 
         const app_starts = JSON.parse(localStorage.getItem("app_starts"));
@@ -488,13 +508,13 @@ const App = () => {
                     } else if (data.actionId === "create_task") {
                         if (!focus_ongoing) {
                             dispatch(add_switch_add);
-                            dispatch(back_index("home"))
+                            dispatch(back_index("home"));
                             history.replace("/add");
                         }
                     } else if (data.actionId === "create_goal") {
                         if (!focus_ongoing) {
                             dispatch(add_switch_goal);
-                            dispatch(back_index("home"))
+                            dispatch(back_index("home"));
                             history.replace("/add");
                         }
                     } else {

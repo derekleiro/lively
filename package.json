@@ -18,6 +18,7 @@
     "cordova-plugin-apprate": "^1.7.1",
     "cordova-plugin-darkmode": "^1.0.0",
     "cordova-plugin-dialogs": "^2.0.2",
+    "cordova-plugin-doze-optimize": "^0.5.4",
     "cordova-plugin-nativestorage": "^2.3.2",
     "cordova-plugin-purchase": "^10.5.3",
     "cordova-plugin-recentscontrol": "^1.1.2",

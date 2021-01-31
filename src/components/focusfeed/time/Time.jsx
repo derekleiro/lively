@@ -59,7 +59,7 @@ const Time = (props) => {
             <div className="category_select" style={style.style2}>
                 <Option
                     selected={selected}
-                    value={9}
+                    value={900}
                     handleSelect={handleSelect}
                 />
                 <Option

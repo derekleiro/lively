@@ -22,6 +22,7 @@ import {
     schedule_notification,
 } from "../../../util/notifications";
 import Done from "../../done/Done";
+import { set_battery_opt } from "../../../actions/home_feed";
 
 const Remind = () => {
     const dispatch = useDispatch();
@@ -35,6 +36,7 @@ const Remind = () => {
     const todo_index = useSelector((state) => state.todo_index);
     const switch_to_add = useSelector((state) => state.addfeed_switch);
     const desc = useSelector((state) => state.todo_desc);
+    const battery_opt = useSelector((state) => state.battery_opt);
 
     const notif_warn = JSON.parse(localStorage.getItem("notif_warning"));
 
@@ -280,17 +282,33 @@ const Remind = () => {
                     I understand
                 </span>
 
-                <span
-                    className="action_button"
-                    style={{
-                        margin: "15px 30px",
-                        color: "#1395ff",
-                    }}
-                    onClick={() => setPrompt(false)}
-                >
-                    How to solve this?
-                </span>
-                <div style={{marginTop: "10px"}}>
+                {battery_opt ? null : (
+                    <div
+                        className="action_button"
+                        style={{
+                            margin: "15px 30px",
+                            color: "#1395ff",
+                        }}
+                        onClick={() => {
+                            setPrompt(false);
+                            window.cordova.plugins.DozeOptimize.RequestOptimizations(
+                                (response) => {
+                                    dispatch(set_battery_opt);
+                                },
+                                (error) => {
+                                    console.error(
+                                        "BatteryOptimizations Request Error" +
+                                            error
+                                    );
+                                }
+                            );
+                        }}
+                    >
+                        Improve the situation
+                    </div>
+                )}
+
+                <span style={{ marginTop: "10px" }}>
                     <span
                         className="action_button"
                         style={{
@@ -304,7 +322,7 @@ const Remind = () => {
                     >
                         Don't show again
                     </span>
-                </div>
+                </span>
             </div>
         </Done>
     );
