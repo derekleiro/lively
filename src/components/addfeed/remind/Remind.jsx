@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import DayPicker from "react-day-picker";
 import moment from "moment";
@@ -22,7 +22,7 @@ import {
     schedule_notification,
 } from "../../../util/notifications";
 import Done from "../../done/Done";
-import { set_battery_opt } from "../../../actions/home_feed";
+import { reset_battery_opt } from "../../../actions/home_feed";
 
 const Remind = () => {
     const dispatch = useDispatch();
@@ -106,8 +106,8 @@ const Remind = () => {
             color: darkMode ? "white" : "black",
             border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
             background: darkMode ? mode.dark : mode.light,
-            height: "500px",
-            maxHeight: "500px",
+            height: "550px",
+            maxHeight: "550px",
             padding: "7.5px 7.5px 7.5px 15px",
             WebkitTapHighlightColor: "transparent",
         },
@@ -253,6 +253,18 @@ const Remind = () => {
         }
     };
 
+    const handleRequest = async () => {
+        window.cordova.plugins.DozeOptimize.RequestOptimizations(
+            (response) => {
+                dispatch(reset_battery_opt);
+            },
+            (error) => {
+                console.error("BatteryOptimizations Request Error" + error);
+                return true;
+            }
+        );
+    };
+
     const warn_jsx = (
         <Done load={true}>
             <div className="done_options">
@@ -291,17 +303,7 @@ const Remind = () => {
                         }}
                         onClick={() => {
                             setPrompt(false);
-                            window.cordova.plugins.DozeOptimize.RequestOptimizations(
-                                (response) => {
-                                    dispatch(set_battery_opt);
-                                },
-                                (error) => {
-                                    console.error(
-                                        "BatteryOptimizations Request Error" +
-                                            error
-                                    );
-                                }
-                            );
+                            handleRequest();
                         }}
                     >
                         Improve the situation
