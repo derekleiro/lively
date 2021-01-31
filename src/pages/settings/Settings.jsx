@@ -6,6 +6,7 @@ import { InAppPurchase2 as Store } from "@ionic-native/in-app-purchase-2";
 import { useHistory } from "react-router-dom";
 import LazyLoad from "react-lazyload";
 import { AppRate } from "@ionic-native/app-rate";
+import { isPlatform } from "@ionic/react";
 
 import Done from "../../components/done/Done";
 
@@ -16,11 +17,15 @@ import { mode } from "../../constants/color";
 import back_icon from "../../assets/icons/back.png";
 import back_icon_light from "../../assets/icons/back_light.png";
 import error500 from "../../assets/icons/404.png";
+import donate_icon from "../../assets/icons/donate.png";
 import { setLightMode, setDarkMode } from "../../actions/dark_mode";
-import { remove_doantion_modal } from "../../actions/home_feed";
+import {
+    remove_donation_modal,
+    set_donation_member,
+} from "../../actions/home_feed";
 
 const Settings = () => {
-    const { Share } = Plugins;
+    const { Share, Toast } = Plugins;
 
     const DONATION_IDS = [
         "1_donation",
@@ -37,10 +42,11 @@ const Settings = () => {
 
     const darkMode = useSelector((state) => state.dark_mode);
     const donation_modal = useSelector((state) => state.donation_modal);
-    const is_member = JSON.parse(localStorage.getItem("member"));
+    const products = useSelector((state) => state.donation.items);
+    const is_member = useSelector((state) => state.is_member);
 
     const [fade, setFade] = useState(false);
-    const [products, setProducts] = useState([]);
+    const [alreadyMember, setAlreadyMember] = useState(false);
     const [purchaseError, setPurchaseError] = useState(false);
 
     const style = {
@@ -93,77 +99,60 @@ const Settings = () => {
         AppRate.promptForRating(true);
     };
 
-    const registerItems = async () => {
-        Store.register({
-            id: DONATION_IDS[0],
-            type: Store.CONSUMABLE,
-        });
-
-        Store.register({
-            id: DONATION_IDS[1],
-            type: Store.CONSUMABLE,
-        });
-
-        Store.register({
-            id: DONATION_IDS[2],
-            type: Store.CONSUMABLE,
-        });
-
-        Store.register({
-            id: DONATION_IDS[3],
-            type: Store.CONSUMABLE,
-        });
-
-        Store.register({
-            id: DONATION_IDS[4],
-            type: Store.CONSUMABLE,
-        });
-
-        Store.register({
-            id: DONATION_IDS[5],
-            type: Store.PAID_SUBSCRIPTION,
-        });
-
-        Store.refresh();
-    };
-
-    const handleOrder = (id) => {
-        Store.order(id).then(
-            (p) => {
-                // Purchase in progress
-            },
-            (e) => {
-                setPurchaseError(true);
-            }
-        );
-    };
-
-    const handleDonation = async (id) => {
+    const handleEvents = async () => {
         Store.when("product")
-            .approved((product) => {
+            .approved(async (product) => {
                 product.verify();
-                if (id === DONATION_IDS[5]) {
-                    localStorage.setItem("member", true);
-                }
                 setPurchaseError(false);
+                localStorage.setItem("donation_modal_shown", true);
+
+                await Toast.show({
+                    text: "Donation processed. Thank you❤",
+                    duration: "long",
+                    position: "bottom",
+                });
+
                 return history.replace("/thanks");
             })
             .verified((product) => {
                 product.finish();
             });
 
-        handleOrder(id);
+        Store.when("product").cancelled(() => {
+            setPurchaseError(true);
+        });
+
+        Store.when("product").error(() => {
+            setPurchaseError(true);
+        });
+
+        Store.when(DONATION_IDS[5]).owned((p) => {
+            dispatch(set_donation_member);
+        });
+    };
+
+    const handleDonation = async (id) => {
+        Store.order(id).then(
+            (p) => {
+                // Processing donation
+            },
+            async (e) => {
+                await Toast.show({
+                    text: "There was an error processing your donation....",
+                    duration: "long",
+                    position: "bottom",
+                });
+                setPurchaseError(true);
+            }
+        );
     };
 
     useEffect(() => {
         let unmounted = false;
-        registerItems().then(() => {
-            Store.ready(() => {
-                if (products.length === 0) {
-                    setProducts(Store.products);
-                }
-            });
-        });
+
+        if (isPlatform("android") || isPlatform("ios")) {
+            handleEvents();
+        }
 
         setTimeout(() => {
             if (!unmounted) {
@@ -173,7 +162,8 @@ const Settings = () => {
 
         return () => {
             unmounted = true;
-            dispatch(remove_doantion_modal);
+            Store.off();
+            dispatch(remove_donation_modal);
         };
     }, []);
 
@@ -210,7 +200,39 @@ const Settings = () => {
 
                     <div className="space"></div>
 
-                    {purchaseError ? (
+                    {alreadyMember && purchaseError === false ? (
+                        <Done load={true}>
+                            <div className="done_options">
+                                <img src={donate_icon} alt="Proud member" />
+                                <div className="done_text">
+                                    Yaay, you're already a member 😎. I am truly
+                                    grateful for all your support ❤
+                                </div>
+                                <div className="done_text">
+                                    You can always{" "}
+                                    <span
+                                        onClick={() =>
+                                            Store.manageSubscriptions()
+                                        }
+                                        style={{ color: "#1395ff" }}
+                                    >
+                                        manage your subsription
+                                    </span>
+                                </div>
+                                <span
+                                    className="action_button"
+                                    style={{
+                                        color: "#1395ff",
+                                    }}
+                                    onClick={() => setAlreadyMember(false)}
+                                >
+                                    Ok
+                                </span>
+                            </div>
+                        </Done>
+                    ) : null}
+
+                    {purchaseError && alreadyMember === false ? (
                         <Done load={true}>
                             <div className="done_options">
                                 <img
@@ -348,6 +370,7 @@ const Settings = () => {
                             that I am alone, also have school, so just hang in
                             there! I will try my best)
                         </div>
+
                         {products.map((product, index) => {
                             return (
                                 <div className="element" key={index}>
@@ -372,7 +395,7 @@ const Settings = () => {
                                                             DONATION_IDS[index]
                                                         );
                                                     } else {
-                                                        return null;
+                                                        setAlreadyMember(true);
                                                     }
                                                 } else {
                                                     handleDonation(

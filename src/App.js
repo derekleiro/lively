@@ -7,6 +7,7 @@ import Dexie from "dexie";
 import moment from "moment";
 import { Howl } from "howler";
 import confetti from "canvas-confetti";
+import { InAppPurchase2 as Store } from "@ionic-native/in-app-purchase-2";
 
 import "./assets/fonts/fonts.css";
 import "./App.css";
@@ -60,6 +61,10 @@ import completed_sound from "./assets/sounds/for-sure.webm";
 import { remove_notification } from "./util/notifications";
 import { encouragements } from "./constants/encouragements";
 import ThankYou from "./pages/thank_you/ThankYou";
+import {
+    dispatch_donation_items,
+    set_donation_member,
+} from "./actions/home_feed";
 
 const sound = new Howl({
     src: [completed_sound],
@@ -69,17 +74,22 @@ const sound = new Howl({
 });
 
 const App = () => {
-    const {
-        LocalNotifications,
-        Toast,
-        NavigationBar,
-        SplashScreen,
-        Device,
-    } = Plugins;
+    const { LocalNotifications, Toast, NavigationBar, SplashScreen } = Plugins;
+
+    const DONATION_IDS = [
+        "1_donation",
+        "3_donation",
+        "10_donation",
+        "30_donation",
+        "100_donation",
+        "2_member",
+    ];
 
     const dispatch = useDispatch();
     const history = useHistory();
+
     const darkMode = useSelector((state) => state.dark_mode);
+    const products = useSelector((state) => state.donation.items);
 
     const month = moment(new Date()).format("MMMM");
     const year = moment(new Date()).format("yyyy");
@@ -136,35 +146,15 @@ const App = () => {
 
     const androidLightTheme = async () => {
         NavigationBar.setLightColor();
-        
-        await Device.requestPermissions().then(async () => {
-            const device = await Device.getInfo();
-
-            if (
-                device.osVersion !== "5.0" ||
-                device.osVersion !== "5.0.2"
-            ) {
-                window.RecentsControl.setOptions(mode.light, "Lively");
-            }
-        });
+        window.RecentsControl.setOptions(mode.light, "Lively");
     };
 
     const androidDarkTheme = async () => {
         NavigationBar.setDarkColor();
-        await Device.requestPermissions().then(async () => {
-            const device = await Device.getInfo();
-
-            if (
-                device.osVersion !== "5.0" ||
-                device.osVersion !== "5.0.2"
-            ) {
-                window.RecentsControl.setOptions(mode.dark, "Lively");
-            }
-        });
-        
+        window.RecentsControl.setOptions(mode.dark, "Lively");
     };
 
-    const persistentNotification = async () => {
+    const notify = async () => {
         await LocalNotifications.schedule({
             notifications: [
                 {
@@ -182,21 +172,55 @@ const App = () => {
         });
     };
 
-    const notify = async () => {
-        await Device.requestPermissions().then(async () => {
-            const device = await Device.getInfo();
-
-            if (
-                device.osVersion !== "5.0" ||
-                device.osVersion !== "5.1.1" ||
-                device.osVersion !== "5.0.2"
-            ) {
-                persistentNotification();
-            }
+    const registerItems = async () => {
+        Store.register({
+            id: DONATION_IDS[0],
+            type: Store.CONSUMABLE,
         });
+
+        Store.register({
+            id: DONATION_IDS[1],
+            type: Store.CONSUMABLE,
+        });
+
+        Store.register({
+            id: DONATION_IDS[2],
+            type: Store.CONSUMABLE,
+        });
+
+        Store.register({
+            id: DONATION_IDS[3],
+            type: Store.CONSUMABLE,
+        });
+
+        Store.register({
+            id: DONATION_IDS[4],
+            type: Store.CONSUMABLE,
+        });
+
+        Store.register({
+            id: DONATION_IDS[5],
+            type: Store.PAID_SUBSCRIPTION,
+        });
+
+        Store.refresh();
     };
 
     useEffect(() => {
+        registerItems().then(() => {
+            Store.ready(() => {
+                if (products.length === 0) {
+                    dispatch(dispatch_donation_items(Store.products));
+                }
+            });
+        });
+
+        if(isPlatform("android") || isPlatform("ios")){
+            Store.when(DONATION_IDS[5]).owned((p) => {
+                dispatch(set_donation_member);
+            });
+        }
+
         const dispatchMode = async () => {
             const localMode = localStorage.getItem("darkMode");
 
@@ -216,7 +240,6 @@ const App = () => {
                 localStorage.setItem("app_starts", 0);
                 localStorage.setItem("donation_modal_shown", false);
                 localStorage.setItem("rate_modal_shown", false);
-                localStorage.setItem("member", false);
 
                 await LocalNotifications.requestPermission().then(async () => {
                     if (isPlatform("android") || isPlatform("ios")) {
@@ -273,9 +296,6 @@ const App = () => {
                             }
                         );
                     } else {
-                        // TODO TEMPORARY, Implement this later using capacitor-dark-mode
-                        // ? window.darkmode.isDarkModeEnabled() to be removed
-
                         dispatch(setLightMode);
                         localStorage.setItem("darkMode", false);
                     }
@@ -301,10 +321,7 @@ const App = () => {
         };
 
         dispatchMode();
-
-        if (isPlatform("android")) {
-            notify();
-        }
+        notify();
 
         const app_starts = JSON.parse(localStorage.getItem("app_starts"));
         localStorage.setItem("app_starts", app_starts ? app_starts + 1 : 1);

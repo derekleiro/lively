@@ -49,7 +49,6 @@ import {
     ListImportant,
     ListInfo,
     ListTasks,
-    ListToggleReducer,
 } from "./list_feed";
 import {
     CompletedGoalsTimeoutReducer,
@@ -78,7 +77,11 @@ import {
     SettingsHeightReducer,
     TimerHeightReducer,
 } from "./scroll_height";
-import { DonationReducer } from "./home_feed";
+import {
+    DonationItemsReducer,
+    DonationMemberReducer,
+    DonationReducer,
+} from "./home_feed";
 
 const allReducers = combineReducers({
     bottom_nav: bottom_nav,
@@ -145,6 +148,8 @@ const allReducers = combineReducers({
     timer_height: TimerHeightReducer,
     settings_height: SettingsHeightReducer,
     donation_modal: DonationReducer,
+    donation: DonationItemsReducer,
+    is_member: DonationMemberReducer,
 });
 
 export default allReducers;

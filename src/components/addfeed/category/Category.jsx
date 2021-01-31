@@ -162,6 +162,9 @@ const Category = () => {
                 .add(list)
                 .then(() => console.log("list added...."))
                 .catch((e) => console.log(e));
+        } else {
+            setSelecting(false);
+            setEmpty(false);
         }
     };
 

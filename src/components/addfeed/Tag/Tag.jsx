@@ -56,15 +56,9 @@ const Tag = () => {
 
     const [data, setData] = useState(todo_tag_option_value);
 
-    const today_timestamp = Date.parse(
-        localStorage.getItem("today_timestamp")
-    );
-    const week_timestamp = Date.parse(
-        localStorage.getItem("week_timestamp")
-    );
-    const month_timestamp = Date.parse(
-        localStorage.getItem("month_timestamp")
-    );
+    const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
+    const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
+    const month_timestamp = Date.parse(localStorage.getItem("month_timestamp"));
 
     const db = new Dexie("LivelyTags");
     db.version(1).stores({
@@ -184,7 +178,7 @@ const Tag = () => {
                 today: today_timestamp,
                 week: week_timestamp,
                 month: month_timestamp,
-            }
+            };
 
             tag_(data_, time);
             dispatch(todo_tag_option(data_));
@@ -202,6 +196,9 @@ const Tag = () => {
             }
 
             setText("");
+        } else {
+            setSelecting(false);
+            setEmpty(false);
         }
     };
 
