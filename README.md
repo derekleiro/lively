@@ -1,2 +1,3 @@
-# lively
-Lively is an ad-free Opensource, Todo &amp; Goals list, Focus &amp; Productivity tracker
+# Lively
+
+Lively is an ad-free Opensource🐱‍🏍, Todo & Goals list🦾, Focus & Productivity tracker🚀
