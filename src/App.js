@@ -8,6 +8,7 @@ import moment from "moment";
 import { Howl } from "howler";
 import confetti from "canvas-confetti";
 import { InAppPurchase2 as Store } from "@ionic-native/in-app-purchase-2";
+import { AndroidPermissions } from "@ionic-native/android-permissions";
 
 import "./assets/fonts/fonts.css";
 import "./App.css";
@@ -74,7 +75,13 @@ const sound = new Howl({
 });
 
 const App = () => {
-    const { LocalNotifications, Toast, NavigationBar, SplashScreen } = Plugins;
+    const {
+        LocalNotifications,
+        Toast,
+        NavigationBar,
+        SplashScreen,
+        Device,
+    } = Plugins;
 
     const DONATION_IDS = [
         "1_donation",
@@ -161,7 +168,6 @@ const App = () => {
                     title: "Your dreams are awaiting!",
                     body: `Let's add a task or a goal to achieve today!`,
                     id: 20202019,
-                    schedule: { at: new Date() },
                     sound: null,
                     attachments: null,
                     actionTypeId: "PERSNOTIF",
@@ -170,6 +176,28 @@ const App = () => {
                 },
             ],
         });
+    };
+
+    const handleAndroidPerms = async () => {
+        await Device.requestPermissions().then(
+            async (result) => {
+                AndroidPermissions.checkPermission(
+                    AndroidPermissions.PERMISSION.READ_PHONE_STATE
+                ).then(
+                    (result) => {
+                        console.log("Has permissions: ", result);
+                    },
+                    (rejected) => {
+                        AndroidPermissions.requestPermission(
+                            AndroidPermissions.PERMISSION.READ_PHONE_STATE
+                        );
+                    }
+                );
+            },
+            (rejected) => {
+                console.log("Could not get permission");
+            }
+        );
     };
 
     const registerItems = async () => {
@@ -207,15 +235,15 @@ const App = () => {
     };
 
     useEffect(() => {
-        registerItems().then(() => {
-            Store.ready(() => {
-                if (products.length === 0) {
+        if (products.length === 0) {
+            registerItems().then(() => {
+                Store.ready(() => {
                     dispatch(dispatch_donation_items(Store.products));
-                }
+                });
             });
-        });
+        }
 
-        if(isPlatform("android") || isPlatform("ios")){
+        if (isPlatform("android") || isPlatform("ios")) {
             Store.when(DONATION_IDS[5]).owned((p) => {
                 dispatch(set_donation_member);
             });
@@ -321,7 +349,11 @@ const App = () => {
         };
 
         dispatchMode();
-        notify();
+
+        if (isPlatform("android")) {
+            handleAndroidPerms();
+            notify();
+        }
 
         const app_starts = JSON.parse(localStorage.getItem("app_starts"));
         localStorage.setItem("app_starts", app_starts ? app_starts + 1 : 1);
@@ -456,11 +488,13 @@ const App = () => {
                     } else if (data.actionId === "create_task") {
                         if (!focus_ongoing) {
                             dispatch(add_switch_add);
+                            dispatch(back_index("home"))
                             history.replace("/add");
                         }
                     } else if (data.actionId === "create_goal") {
                         if (!focus_ongoing) {
                             dispatch(add_switch_goal);
+                            dispatch(back_index("home"))
                             history.replace("/add");
                         }
                     } else {

@@ -10,7 +10,7 @@
             "androidSplashResourceName": "splash_background"
         },
         "LocalNotifications": {
-            "smallIcon": "icon",
+            "smallIcon": "ic_stat_name",
             "iconColor": "#1395ff",
             "sound": "beep.mp3"
         }

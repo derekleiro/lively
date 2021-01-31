@@ -80,6 +80,8 @@ const CountDown = (props) => {
     const month_timestamp = Date.parse(localStorage.getItem("month_timestamp"));
     const data_local = JSON.parse(localStorage.getItem("focus"));
 
+    let timer_interval;
+
     const style = {
         color: "#1395ff",
         fontFamily: "Poppins, san-serif",
@@ -386,7 +388,7 @@ const CountDown = (props) => {
                 ],
             });
 
-            const timer_interval = setInterval(() => {
+            timer_interval = setInterval(() => {
                 const duration = moment.duration(
                     eventTime - moment(new Date()).toDate() - interval
                 );
@@ -416,6 +418,8 @@ const CountDown = (props) => {
                 (not) => not.id === "111222333"
             ),
         });
+
+        clearInterval(timer_interval)
     };
 
     useEffect(() => {

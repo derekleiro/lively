@@ -464,7 +464,14 @@ const AddFeed = () => {
                                     history.goBack();
                                 }
                             } else {
-                                history.goBack();
+                                if (
+                                    back_index === "home" &&
+                                    switch_to_add === "goal"
+                                ) {
+                                    history.replace("/goals");
+                                } else {
+                                    history.goBack();
+                                }
                             }
                         }}
                     />
