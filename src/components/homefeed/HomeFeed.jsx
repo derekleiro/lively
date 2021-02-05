@@ -342,6 +342,7 @@ const HomeFeed = () => {
                                 onClick={() => {
                                     AppRate.setPreferences = {
                                         displayAppName: "Lively",
+                                        inAppReview: true,
                                         storeAppURL: {
                                             // ios: "<app_id>", Coming soon
                                             android:
@@ -354,6 +355,13 @@ const HomeFeed = () => {
                                             cancelButton: "Not today",
                                             laterButtonLabel: "Remind me later",
                                             rateButtonLabel: "Let's goo!",
+                                            cancelButtonLabel: "Not today",
+                                            yesButtonLabel: "Yes!",
+                                            noButtonLabel: "Not really",
+                                            appRatePromptTitle:
+                                                "Did you find %@ useful?",
+                                            feedbackPromptTitle:
+                                                "I would love to here from you 😊",
                                         },
                                     };
                                     AppRate.promptForRating(true);
@@ -490,7 +498,7 @@ const HomeFeed = () => {
                                     : "0",
                             }}
                         >
-                            Earlier 
+                            Earlier
                             <span
                                 style={{ margin: `0 5px`, ...style }}
                                 dangerouslySetInnerHTML={{ __html: `&#8226;` }}

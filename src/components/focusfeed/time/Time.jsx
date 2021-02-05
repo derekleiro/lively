@@ -11,6 +11,7 @@ const Time = (props) => {
     const dispatch = useDispatch();
     const darkMode = useSelector((state) => state.dark_mode);
     const focus_info = useSelector((state) => state.focus_info);
+    const data_local = JSON.parse(localStorage.getItem("focus"));
 
     const [selected, setSelected] = useState(3600);
 
@@ -48,7 +49,9 @@ const Time = (props) => {
     };
 
     useEffect(() => {
-        handleSelect(selected);
+        if (!focus_info || !data_local) {
+            handleSelect(selected);
+        }
     }, []);
 
     return (

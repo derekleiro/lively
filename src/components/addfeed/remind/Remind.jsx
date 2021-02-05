@@ -9,7 +9,7 @@ import "../duedate/date-picker.css";
 
 import remind from "../../../assets/icons/remind.png";
 import remind_light from "../../../assets/icons/remind_light.png";
-import missing_404 from "../../../assets/icons/404.png";
+import tip_icon from "../../../assets/icons/tip.png";
 
 import { mode } from "../../../constants/color";
 import {
@@ -273,7 +273,7 @@ const Remind = () => {
                         width: "100px",
                         height: "100px",
                     }}
-                    src={missing_404}
+                    src={tip_icon}
                     alt="You may not always receive your notifications"
                 />
                 <div className="done_text">

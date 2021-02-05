@@ -1,4 +1,5 @@
 import { Plugins } from "@capacitor/core";
+import moment from "moment";
 
 export const remove_notification = async (index) => {
     const { LocalNotifications } = Plugins;
@@ -32,7 +33,7 @@ export const schedule_notification = async (
             await LocalNotifications.schedule({
                 notifications: [
                     {
-                        title: "Upcoming task in 5 minutes:",
+                        title: `Due ${moment(timestamp).format("LT")}`,
                         body: `${desc}`,
                         id: index,
                         schedule: { at: timestamp },
@@ -49,7 +50,7 @@ export const schedule_notification = async (
         await LocalNotifications.schedule({
             notifications: [
                 {
-                    title: "Upcoming task in 5 minutes:",
+                    title: `Due ${moment(timestamp).format("LT")}`,
                     body: `${desc}`,
                     id: index,
                     schedule: { at: timestamp },

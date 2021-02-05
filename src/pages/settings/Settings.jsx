@@ -83,6 +83,7 @@ const Settings = () => {
     const handleReview = () => {
         AppRate.setPreferences = {
             displayAppName: "Lively",
+            inAppReview: true,
             storeAppURL: {
                 // ios: "<app_id>", Coming soon
                 android: "market://details?id=com.lively.life",
@@ -93,6 +94,11 @@ const Settings = () => {
                 cancelButton: "Not today",
                 laterButtonLabel: "Remind me later",
                 rateButtonLabel: "Let's goo!",
+                cancelButtonLabel: "Not today",
+                yesButtonLabel: "Yes!",
+                noButtonLabel: "Not really",
+                appRatePromptTitle: "Did you find %@ useful?",
+                feedbackPromptTitle: "I would love to here from you 😊",
             },
         };
 

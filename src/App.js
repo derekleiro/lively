@@ -538,8 +538,6 @@ const App = () => {
         }
 
         action();
-
-        SplashScreen.hide();
     }, [dispatch, darkMode]);
 
     return (
@@ -549,6 +547,7 @@ const App = () => {
                 backgroundColor: darkMode ? mode.dark : mode.light,
                 color: darkMode ? "white" : "black",
             }}
+            onLoad={() => SplashScreen.hide()}
         >
             <Switch>
                 <Route path="/" exact={true} component={Home} />

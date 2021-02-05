@@ -7,6 +7,7 @@
     "plugins": {
         "SplashScreen": {
             "backgroundColor": "#000",
+            "launchShowDuration": 60000,
             "androidSplashResourceName": "splash_background"
         },
         "LocalNotifications": {

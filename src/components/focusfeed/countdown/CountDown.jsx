@@ -12,7 +12,6 @@ import "./count-down.css";
 import celebrate from "../../../assets/icons/done.png";
 
 import Done from "../../done/Done";
-import { focus_timeSET } from "../../../actions/focus_feed";
 import {
     goal_focus_edit,
     todo_complete,
@@ -362,6 +361,35 @@ const CountDown = (props) => {
         }
     };
 
+    const notify = async () => {
+        await LocalNotifications.schedule({
+            notifications: [
+                {
+                    title: "Focus session",
+                    body: `Your session will end at ${moment(
+                        focus_info.event_time
+                    ).format("LT")}`,
+                    id: 111222334,
+                    sound: null,
+                    attachments: null,
+                    actionTypeId: "",
+                    extra: null,
+                    ongoing: true,
+                    autoCancel: false,
+                },
+            ],
+        });
+    };
+
+    const remove_notif = async () => {
+        const nots = await LocalNotifications.getPending();
+        await LocalNotifications.cancel({
+            notifications: nots.notifications.filter(
+                (not) => not.id === "111222334"
+            ),
+        });
+    };
+
     const startTimer = async () => {
         if (focus_info.event_time) {
             var eventTime = moment(focus_info.event_time).toDate();
@@ -405,6 +433,7 @@ const CountDown = (props) => {
                     props.handleTimeSet();
                     setDone(true);
                     save_session();
+                    remove_notif();
                     clearInterval(timer_interval);
                 }
             }, interval);
@@ -419,11 +448,14 @@ const CountDown = (props) => {
             ),
         });
 
-        clearInterval(timer_interval)
+        remove_notif();
+        clearInterval(timer_interval);
     };
 
     useEffect(() => {
         let unmounted = false;
+
+        notify();
 
         if (!unmounted) {
             startTimer();
