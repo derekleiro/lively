@@ -519,6 +519,12 @@ const App = () => {
                         }
                     } else {
                         if (!focus_ongoing) {
+                            await Toast.show({
+                                text: "Please wait...",
+                                duration: "short",
+                                position: "bottom",
+                            });
+
                             dispatch(focus_info(data.notification.extra));
                             setTimeout(
                                 () =>
