@@ -539,7 +539,7 @@ const Settings = () => {
                             color: "grey",
                         }}
                     >
-                        Lively v1.07 build #7
+                        Lively v1.08 build #8
                     </div>
                 </div>
             </div>

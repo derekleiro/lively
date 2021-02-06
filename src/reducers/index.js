@@ -28,6 +28,7 @@ import {
     AddFeedTagSelectedReducer,
     AddFeedNotifReducer,
     GoalBackIndexReducer,
+    TipsReducer,
 } from "./add_feed";
 import {
     FocusDoneReducer,
@@ -152,6 +153,7 @@ const allReducers = combineReducers({
     donation: DonationItemsReducer,
     is_member: DonationMemberReducer,
     battery_opt: BatteryOptimisationsReducer,
+    tip_state: TipsReducer,
 });
 
 export default allReducers;

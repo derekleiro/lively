@@ -2,3 +2,9 @@
     margin: 10px 0;
     text-align: center;
 }
+
+.tip img{
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+}

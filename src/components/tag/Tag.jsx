@@ -7,10 +7,10 @@ import { useHistory } from "react-router-dom";
 
 import "./tag.css";
 
-import edit_complete from "../../../assets/icons/edit_complete.png";
-import edit_complete_light from "../../../assets/icons/edit_complete_light.png";
-import tag from "../../../assets/icons/tag.png";
-import tag_light from "../../../assets/icons/tag_light.png";
+import edit_complete from "../../assets/icons/edit_complete.png";
+import edit_complete_light from "../../assets/icons/edit_complete_light.png";
+import tag from "../../assets/icons/tag.png";
+import tag_light from "../../assets/icons/tag_light.png";
 
 import Option from "./option/Option";
 import {
@@ -19,17 +19,17 @@ import {
     todo_edit,
     todo_tag_option,
     todo_tag_selected,
-} from "../../../actions/add_feed";
-import { refresh_list_state } from "../../../actions/list_feed";
-import { list_timeout_clear } from "../../../actions/timeouts";
-import tag_ from "../../../util/tag";
-import { navStateHome } from "../../../actions/bottom_nav";
+} from "../../actions/add_feed";
+import { refresh_list_state } from "../../actions/list_feed";
+import { list_timeout_clear } from "../../actions/timeouts";
+import tag_ from "../../util/tag";
+import { navStateHome } from "../../actions/bottom_nav";
 import {
     add_chart_data_tag,
     delete_chart_data_tag,
-} from "../../../actions/timer_feed";
+} from "../../actions/timer_feed";
 
-const Tag = () => {
+const Tag = (props) => {
     const dispatch = useDispatch();
     const history = useHistory();
 
@@ -253,7 +253,7 @@ const Tag = () => {
     return (
         <div className="category" style={{ marginTop: "25px" }}>
             <div style={{ marginBottom: "15px", marginLeft: "5px" }}>
-                Add a tag
+                {props.focus ? "What are you focusing on?" : "Add a tag"}
             </div>
             {selecting ? (
                 <div className="category_select" style={style.style2}>

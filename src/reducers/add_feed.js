@@ -639,3 +639,12 @@ export const BackIndexReducer = (state = "/", action) => {
             return state;
     }
 };
+
+export const TipsReducer = (state = 0, action) => {
+    switch (action.type) {
+        case "HANDLE_TIP_STATE":
+            return (state = state + 1);
+        default:
+            return state;
+    }
+};

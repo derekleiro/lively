@@ -8,7 +8,6 @@ import moment from "moment";
 import { Howl } from "howler";
 import confetti from "canvas-confetti";
 import { InAppPurchase2 as Store } from "@ionic-native/in-app-purchase-2";
-import { AndroidPermissions } from "@ionic-native/android-permissions";
 
 import "./assets/fonts/fonts.css";
 import "./App.css";
@@ -77,13 +76,7 @@ const sound = new Howl({
 });
 
 const App = () => {
-    const {
-        LocalNotifications,
-        Toast,
-        NavigationBar,
-        SplashScreen,
-        Device,
-    } = Plugins;
+    const { LocalNotifications, Toast, NavigationBar, SplashScreen } = Plugins;
 
     const DONATION_IDS = [
         "1_donation",
@@ -99,6 +92,7 @@ const App = () => {
 
     const darkMode = useSelector((state) => state.dark_mode);
     const products = useSelector((state) => state.donation.items);
+    const focus_ongoing_state = JSON.parse(localStorage.getItem("focus"));
 
     const month = moment(new Date()).format("MMMM");
     const year = moment(new Date()).format("yyyy");
@@ -178,28 +172,6 @@ const App = () => {
                 },
             ],
         });
-    };
-
-    const handleAndroidPerms = async () => {
-        await Device.requestPermissions().then(
-            async (result) => {
-                AndroidPermissions.checkPermission(
-                    AndroidPermissions.PERMISSION.READ_PHONE_STATE
-                ).then(
-                    (result) => {
-                        console.log("Has permissions: ", result);
-                    },
-                    (no_permission) => {
-                        AndroidPermissions.requestPermission(
-                            AndroidPermissions.PERMISSION.READ_PHONE_STATE
-                        );
-                    }
-                );
-            },
-            (rejected) => {
-                console.log("Could not get permission");
-            }
-        );
     };
 
     const handleBatteryOptimisations = async () => {
@@ -367,11 +339,9 @@ const App = () => {
         };
 
         dispatchMode();
-
         notify();
 
         if (isPlatform("android")) {
-            handleAndroidPerms();
             handleBatteryOptimisations();
         }
 
@@ -384,9 +354,9 @@ const App = () => {
             dispatch(focus_info(data));
             if (data.type) {
                 dispatch(focus_timeSET(data.focustime));
-                setTimeout(() => history.replace(`/focus_${data.url}`), 2500);
+                history.replace(`/focus_${data.url}`);
             } else {
-                setTimeout(() => history.replace(`/focus`), 2500);
+                history.replace(`/focus`);
             }
         };
 
@@ -517,21 +487,11 @@ const App = () => {
                             dispatch(back_index("home"));
                             history.replace("/add");
                         }
-                    } else {
+                    } else if (data.actionId === "focus") {
                         if (!focus_ongoing) {
-                            await Toast.show({
-                                text: "Please wait...",
-                                duration: "short",
-                                position: "bottom",
-                            });
-
                             dispatch(focus_info(data.notification.extra));
-                            setTimeout(
-                                () =>
-                                    history.replace(
-                                        `/focus_${data.notification.extra.tag_id}`
-                                    ),
-                                2500
+                            history.replace(
+                                `/focus_${data.notification.extra.tag_id}`
                             );
                         }
                     }
@@ -544,6 +504,7 @@ const App = () => {
         }
 
         action();
+        SplashScreen.hide();
     }, [dispatch, darkMode]);
 
     return (
@@ -553,7 +514,6 @@ const App = () => {
                 backgroundColor: darkMode ? mode.dark : mode.light,
                 color: darkMode ? "white" : "black",
             }}
-            onLoad={() => SplashScreen.hide()}
         >
             <Switch>
                 <Route path="/" exact={true} component={Home} />

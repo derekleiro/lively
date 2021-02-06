@@ -324,6 +324,48 @@ const CountDown = (props) => {
                     });
             }
         } else {
+            if (focus_info.tag) {
+                if (chart_data.today !== null && chart_data.week !== null) {
+                    dispatch(
+                        edit_chart_data({
+                            id: focus_info.tag_id,
+                            focustime: focus_info.time || data_local.time,
+                        })
+                    );
+
+                    dispatch(
+                        most_focused_edit({
+                            id: focus_info.tag_id,
+                            focustime: focus_info.time || data_local.time,
+                            data: chart_data,
+                        })
+                    );
+                }
+
+                const time = {
+                    today: today_timestamp,
+                    week: week_timestamp,
+                    month: month_timestamp,
+                };
+
+                const data_ = {
+                    id: focus_info.tag_id,
+                    total_focus: focus_info.time || data_local.time,
+                    name: focus_info.tag,
+                    today: {
+                        focused: focus_info.time || data_local.time,
+                    },
+                    week: {
+                        focused: focus_info.time || data_local.time,
+                    },
+                    month: {
+                        focused: focus_info.time || data_local.time,
+                    },
+                };
+
+                tag_(data_, time);
+            }
+
             const data = {
                 month,
                 year,
@@ -359,6 +401,8 @@ const CountDown = (props) => {
             dispatch(edit_timer_feed_today(data_));
             dispatch(edit_timer_feed_week(data_));
         }
+
+        return "complete";
     };
 
     const notify = async () => {
@@ -432,8 +476,12 @@ const CountDown = (props) => {
                     sound.play();
                     props.handleTimeSet();
                     setDone(true);
-                    save_session();
                     remove_notif();
+                    save_session().then((feedback) => {
+                        if (feedback === "complete") {
+                            localStorage.removeItem("focus");
+                        }
+                    });
                     clearInterval(timer_interval);
                 }
             }, interval);

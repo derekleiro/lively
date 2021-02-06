@@ -10,8 +10,16 @@ import { focus_timeSET } from "../../../actions/focus_feed";
 const Time = (props) => {
     const dispatch = useDispatch();
     const darkMode = useSelector((state) => state.dark_mode);
-    const focus_info = useSelector((state) => state.focus_info);
+    const focus_info_state = useSelector((state) => state.focus_info);
     const data_local = JSON.parse(localStorage.getItem("focus"));
+    const todo_tag_selected_value = useSelector((state) =>
+        state.todo_tag_selected ? state.todo_tag_selected.tag : null
+    );
+    const todo_tag_selected_id = useSelector((state) =>
+        state.todo_tag_selected ? state.todo_tag_selected.id : null
+    );
+
+    console.log(data_local)
 
     const [selected, setSelected] = useState(3600);
 
@@ -34,14 +42,24 @@ const Time = (props) => {
             props.handleSelect(selected, {
                 event_time: moment(new Date()).add(selected, "s").toDate(),
                 time: selected,
-                type: focus_info ? focus_info.type || null : null,
-                steps: focus_info ? focus_info.steps || [] : [],
-                text: focus_info ? focus_info.text || "" : "",
-                extra: focus_info ? focus_info.extra || "" : "",
-                focustime: focus_info ? focus_info.focustime || 0 : 0,
-                url: focus_info ? focus_info.url || null : null,
-                tag: focus_info ? focus_info.tag || null : null,
-                tag_id: focus_info ? focus_info.tag_id || null : null,
+                type: focus_info_state ? focus_info_state.type || null : null,
+                steps: focus_info_state ? focus_info_state.steps || [] : [],
+                text: focus_info_state ? focus_info_state.text || "" : "",
+                extra: focus_info_state ? focus_info_state.extra || "" : "",
+                focustime: focus_info_state
+                    ? focus_info_state.focustime || 0
+                    : 0,
+                url: focus_info_state ? focus_info_state.url || null : null,
+                tag: todo_tag_selected_value
+                    ? todo_tag_selected_value
+                    : focus_info_state
+                    ? focus_info_state.tag
+                    : null,
+                tag_id: todo_tag_selected_id
+                    ? todo_tag_selected_id
+                    : focus_info_state
+                    ? focus_info_state.tag_id
+                    : null,
             });
             setSelected(selected);
             dispatch(focus_timeSET(selected));
@@ -49,10 +67,10 @@ const Time = (props) => {
     };
 
     useEffect(() => {
-        if (!focus_info || !data_local) {
+        if (!data_local) {
             handleSelect(selected);
         }
-    }, []);
+    }, [todo_tag_selected_value]);
 
     return (
         <div className="category" style={{ marginTop: "35px" }}>

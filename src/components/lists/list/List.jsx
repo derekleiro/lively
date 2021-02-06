@@ -118,6 +118,7 @@ const List = (props) => {
         } else {
             props.handleEditBlank();
             setEdit(false);
+            setText(props.name)
         }
     };
 

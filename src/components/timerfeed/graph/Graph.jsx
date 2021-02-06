@@ -4,6 +4,9 @@ import { useSelector } from "react-redux";
 import { Bar, defaults } from "react-chartjs-2";
 import { merge } from "lodash";
 
+import tag from "../../../assets/icons/tag.png";
+import tag_light from "../../../assets/icons/tag_light.png";
+
 import "./graph.css";
 
 const Graph = (props) => {
@@ -143,12 +146,21 @@ const Graph = (props) => {
             {props.data ? (
                 props.data.values.length === 0 ? (
                     <div className="tip">
-                        Tip: To get graph data, focus on a task with a tag
+                        <span>Tip: To get graph data, focus on a tag </span>
+                        <span>
+                            <img
+                                src={darkMode ? tag_light : tag}
+                                alt="tag icon"
+                            />
+                        </span>
                     </div>
                 ) : null
             ) : (
                 <div className="tip">
-                    Tip: To get graph data, focus on a task with a tag
+                    <span>Tip: To get graph data, focus on a tag </span>
+                    <span>
+                        <img src={darkMode ? tag_light : tag} alt="tag icon" />
+                    </span>
                 </div>
             )}
         </div>

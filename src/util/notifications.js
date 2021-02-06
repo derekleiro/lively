@@ -33,7 +33,7 @@ export const schedule_notification = async (
             await LocalNotifications.schedule({
                 notifications: [
                     {
-                        title: `Due ${moment(timestamp).format("LT")}`,
+                        title: `Due ${moment(timestamp_raw).format("LT")}`,
                         body: `${desc}`,
                         id: index,
                         schedule: { at: timestamp },
@@ -50,7 +50,7 @@ export const schedule_notification = async (
         await LocalNotifications.schedule({
             notifications: [
                 {
-                    title: `Due ${moment(timestamp).format("LT")}`,
+                    title: `Due ${moment(timestamp_raw).format("LT")}`,
                     body: `${desc}`,
                     id: index,
                     schedule: { at: timestamp },

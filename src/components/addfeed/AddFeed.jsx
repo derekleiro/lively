@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Dexie from "dexie";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useHistory } from "react-router-dom";
@@ -34,12 +34,14 @@ import {
     remove_notif,
     todos_clear,
     clear_completed_goals,
+    handle_tip_state,
 } from "../../actions/add_feed";
 
 import { home_timeout_clear } from "../../actions/timeouts";
 
 import back_icon from "../../assets/icons/back.png";
 import back_icon_light from "../../assets/icons/back_light.png";
+import tip_icon from "../../assets/icons/tip.png";
 
 import TextBar from "./textbar/Textbar";
 import Category from "./category/Category";
@@ -55,18 +57,73 @@ import {
 } from "../../util/notifications";
 import { refresh_list_state } from "../../actions/list_feed";
 import { list_timeout_clear } from "../../actions/timeouts";
-import Tag from "./Tag/Tag";
+import Tag from "../tag/Tag";
 import { navStateLists } from "../../actions/bottom_nav";
 import { clear_chart_data } from "../../actions/timer_feed";
 import { session_add } from "../../util/session_add";
 import add_session from "../../util/session";
 import repeat from "../../util/repeat";
+import Done from "../done/Done";
 
 const AddFeed = () => {
     const dispatch = useDispatch();
     const history = useHistory();
     const darkMode = useSelector((state) => state.dark_mode);
     const switch_to_add = useSelector((state) => state.addfeed_switch);
+
+    const TIPS_SECTION_1 = [
+        "Have a challenging goal",
+        "Distraction is the enemy of flow",
+        "Small chunks are easier to digest than large ones",
+        "It takes time to build momemntum",
+        "Stress does not improve the situation, it adds on to it",
+        "Failure is the best evidence that you're trying",
+        "Don't give stress much attention",
+        "The 80/20 Rule",
+        "Feel like you want to stop a task after starting?",
+        "If the task is too big, you're more likely to put it off.",
+        "21 Days",
+        "Reward yourself for every task done!",
+        "Always distracted?",
+        "Start with the easiest tasks",
+        "You're more likely to procrastinate when you're tired",
+    ];
+
+    const TIPS_SECTION_2 = [
+        "Make sure you know what you are aiming for in this session and why you are aiming for it",
+        "Once you gain momentum, maintain it.",
+        "A great way to overcome procrastination is to have small easy to do tasks.",
+        "You will feel a huge amount of resistance",
+        "People are so bad at performing under pressure or stress.",
+        "Being productive is not easy. Our bodies naturally build resistance.",
+        "It does not deserve it",
+        "20 percent of your activities will account for 80 percent of your results.",
+        "That means you are about to break the 20 minute barrier",
+        "Break done your tasks into very small chunks",
+        "The average number of days to somewhat develop a habit. 66 days for the habit to become automatic",
+        "This is called postive reinforcement. The main purpose of this app",
+        "Download the YourHour app. It does a great job limiting your phone distractions",
+        "This will help you build momentum to continue to tackle the harder tasks",
+        "Simply not having enough sleep can actually hold you back",
+    ];
+
+    const TIPS_SECTION_3 = [
+        "The goal needs to be challenging enough for your skillset, not too difficult and not too easy as to bore you",
+        "Do not let distractions break your momentum as it will be hard to get back into it",
+        "Think of what you want to achieve and make it even smaller",
+        "But if you keep doing it, you will have enough momentum to keep going",
+        "In fact it increases your chances of failure even if you were prepared.",
+        "And so it is ok to fail, because you're trying",
+        "",
+        "And 80% of your activities will account for 20 percent of your results.",
+        "Once you break past the 20 minute mark, your momentum will be suffient to keep doing the task. Don't give up!",
+        "",
+        "Keep going! The reward is sweet!",
+        "While I congratulate you after every task and goal, I also encourage you to reward yourself for every task/goal done!",
+        "I don't own the app, but I think it will really help you out",
+        "",
+        "Get enough sleep and reward yourself with a break after you have completed a task",
+    ];
 
     const todo_complete_set_state = useSelector(
         (state) => state.todo_complete_set
@@ -99,6 +156,9 @@ const AddFeed = () => {
     const back_index = useSelector((state) => state.back_index);
     const goal_index = useSelector((state) => state.goal_index);
     const notif_state = useSelector((state) => state.notif_state);
+    const tip_state = useSelector((state) => state.tip_state);
+
+    const [tipNumber, setTipNumber] = useState(2);
 
     const month = moment(new Date()).format("MMMM");
     const year = moment(new Date()).format("yyyy");
@@ -418,6 +478,8 @@ const AddFeed = () => {
     };
 
     useEffect(() => {
+        setTipNumber(Math.floor(Math.random() * 15));
+
         if (notif_state) {
             dispatch(todos_clear);
             dispatch(home_timeout_clear);
@@ -426,6 +488,7 @@ const AddFeed = () => {
         }
 
         return () => {
+            dispatch(handle_tip_state)
             if (switch_to_add === "add_" || switch_to_add === "goal_") {
                 clearState();
             }
@@ -587,6 +650,41 @@ const AddFeed = () => {
             </div>
 
             <div className="space"></div>
+
+            {tip_state === 0 ? (
+                <Done load={true} extra={true}>
+                    <div className="done_options">
+                        <img
+                            style={{
+                                width: "100px",
+                                height: "100px",
+                            }}
+                            src={tip_icon}
+                            alt={`Some tips to help you beat procrastination`}
+                        />
+
+                        <div className="big_text">
+                            {TIPS_SECTION_1[tipNumber]}
+                        </div>
+                        <div className="done_text">
+                            {TIPS_SECTION_2[tipNumber]}
+                        </div>
+                        <div className="done_text">
+                            {TIPS_SECTION_3[tipNumber]}
+                        </div>
+                        <span
+                            className="action_button"
+                            style={{
+                                margin: "0 30px",
+                                color: "#1395ff",
+                            }}
+                            onClick={() => dispatch(handle_tip_state)}
+                        >
+                            Thanks
+                        </span>
+                    </div>
+                </Done>
+            ) : null}
 
             {switch_to_add === "add" || switch_to_add === "add_" ? (
                 <span>

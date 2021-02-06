@@ -3,15 +3,15 @@ import { useSelector } from "react-redux";
 
 import "./option.css";
 
-import edit_complete from "../../../../assets/icons/edit_complete.png";
-import edit_complete_light from "../../../../assets/icons/edit_complete_light.png";
+import edit_complete from "../../../assets/icons/edit_complete.png";
+import edit_complete_light from "../../../assets/icons/edit_complete_light.png";
 
-import delete_icon from "../../../../assets/icons/delete.png";
-import delete_light from "../../../../assets/icons/delete_light.png";
+import delete_icon from "../../../assets/icons/delete.png";
+import delete_light from "../../../assets/icons/delete_light.png";
 
-import delete_large_icon from "../../../../assets/icons/delete_item.png";
+import delete_large_icon from "../../../assets/icons/delete_item.png";
 
-import Done from "../../../done/Done";
+import Done from "../../done/Done";
 
 const Option = (props) => {
     const darkMode = useSelector((state) => state.dark_mode);

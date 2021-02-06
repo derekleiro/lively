@@ -386,3 +386,7 @@ export const back_index = (data) => {
         payload: data,
     };
 };
+
+export const handle_tip_state = {
+    type: "HANDLE_TIP_STATE",
+};
