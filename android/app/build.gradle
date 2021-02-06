@@ -7,8 +7,8 @@ android {
         applicationId "com.lively.life"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "1.08"
+        versionCode 9
+        versionName "1.09"
     }
     buildTypes {
         release {
