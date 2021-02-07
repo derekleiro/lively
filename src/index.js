@@ -30,3 +30,4 @@ ReactDOM.render(
 serviceWorker.unregister();
 
 // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+// prettier --write "**/*.js"

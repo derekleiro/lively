@@ -83,6 +83,7 @@ import {
     DonationItemsReducer,
     DonationMemberReducer,
     DonationReducer,
+    LimitBottomNavReducer
 } from "./home_feed";
 
 const allReducers = combineReducers({
@@ -154,6 +155,7 @@ const allReducers = combineReducers({
     is_member: DonationMemberReducer,
     battery_opt: BatteryOptimisationsReducer,
     tip_state: TipsReducer,
+    bottom_nav_limit_state: LimitBottomNavReducer
 });
 
 export default allReducers;

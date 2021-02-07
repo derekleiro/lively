@@ -32,3 +32,11 @@ export const set_battery_opt = {
 export const reset_battery_opt = {
     type: "RESET_BATTERY_OPT",
 };
+
+export const activate_bnav_limit = {
+    type: "ACTIVATE_LIMIT",
+};
+
+export const reset_bnav_limit = {
+    type: "RESET_LIMIT",
+};

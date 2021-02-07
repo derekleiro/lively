@@ -44,3 +44,14 @@ export const BatteryOptimisationsReducer = (state = 0, action) => {
             return state;
     }
 };
+
+export const LimitBottomNavReducer = (state = 0, action) => {
+    switch (action.type) {
+        case "ACTIVATE_LIMIT":
+            return (state = state + 1);
+        case "RESET_LIMIT":
+            return (state = 0);
+        default:
+            return state;
+    }
+};
