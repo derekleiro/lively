@@ -19,8 +19,6 @@ const Time = (props) => {
         state.todo_tag_selected ? state.todo_tag_selected.id : null
     );
 
-    console.log(data_local)
-
     const [selected, setSelected] = useState(3600);
 
     const style = {

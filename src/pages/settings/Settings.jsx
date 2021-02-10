@@ -437,7 +437,7 @@ const Settings = () => {
                             </span>
                             <span style={{ flex: "1", textAlign: "right" }}>
                                 <a
-                                    href="mailto://lively@random-ly.com"
+                                    href="mailto://hi@derekleiro.me"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >

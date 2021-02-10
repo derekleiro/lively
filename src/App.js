@@ -66,6 +66,8 @@ import {
 	reset_battery_opt,
 	set_battery_opt,
 	set_donation_member,
+	activate_bnav_limit,
+	reset_bnav_limit
 } from "./actions/home_feed";
 
 const sound = new Howl({
