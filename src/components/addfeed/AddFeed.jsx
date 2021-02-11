@@ -94,7 +94,7 @@ const AddFeed = () => {
 		"Once you gain momentum, maintain it.",
 		"A great way to overcome procrastination is to have small easy to do tasks.",
 		"You will feel a huge amount of resistance",
-		"People are so bad at performing under pressure or stress.",
+		"We are not so good at performing under pressure or stress.",
 		"Being productive is not easy. Our bodies naturally build resistance.",
 		"It does not deserve it",
 		"20 percent of your activities will account for 80 percent of your results.",
@@ -108,11 +108,11 @@ const AddFeed = () => {
 	];
 
 	const TIPS_SECTION_3 = [
-		"The goal needs to be challenging enough for your skillset, not too difficult and not too easy as to bore you",
+		"The goal needs to be challenging enough for your skillset, not too difficult and not too easy",
 		"Do not let distractions break your momentum as it will be hard to get back into it",
 		"Think of what you want to achieve and make it even smaller",
-		"But if you keep doing it, you will have enough momentum to keep going",
-		"In fact it increases your chances of failure even if you were prepared.",
+		"But if you keep doing it, you will have enough momentum to keep going!",
+		"It increases our chances of failure even if we were prepared. Accept the situation and take it a step at a time",
 		"And so it is ok to fail, because you're trying",
 		"",
 		"And 80% of your activities will account for 20 percent of your results.",
@@ -122,7 +122,7 @@ const AddFeed = () => {
 		"While I congratulate you after every task and goal, I also encourage you to reward yourself for every task/goal done!",
 		"I don't own the app, but I think it will really help you out",
 		"",
-		"Get enough sleep and reward yourself with a break after you have completed a task",
+		"Get enough sleep and reward yourself with a break after you have completed a task/goal",
 	];
 
 	const todo_complete_set_state = useSelector(
@@ -650,7 +650,12 @@ const AddFeed = () => {
 								margin: "0 30px",
 								color: "#1395ff",
 							}}
-							onClick={() => dispatch(handle_tip_state)}
+							onClick={() => {
+								dispatch(handle_tip_state);
+								if (switch_to_add === "add" || switch_to_add === "goal") {
+									dispatch(textarea_state(false));
+								}
+							}}
 						>
 							Thanks
 						</span>

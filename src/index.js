@@ -9,19 +9,17 @@ import App from "./App";
 import allReducers from "./reducers";
 
 const store = createStore(
-    allReducers,
-    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+	allReducers,
+	window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 ); // pass in reducers
 
 ReactDOM.render(
-    <div style={{ background: "#000" }}>
-        <Router>
-            <Provider store={store}>
-                <App />
-            </Provider>
-        </Router>
-    </div>,
-    document.getElementById("root")
+	<Router>
+		<Provider store={store}>
+			<App />
+		</Provider>
+	</Router>,
+	document.getElementById("root")
 );
 
 // If you want your app to work offline and load faster, you can change

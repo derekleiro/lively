@@ -1,19 +1,21 @@
 {
-    "appId": "com.lively.life",
-    "appName": "Lively",
-    "bundledWebRuntime": false,
-    "npmClient": "npm",
-    "webDir": "build",
-    "plugins": {
-        "SplashScreen": {
-            "backgroundColor": "#000",
-            "androidSplashResourceName": "splash_background"
-        },
-        "LocalNotifications": {
-            "smallIcon": "icon",
-            "iconColor": "#1395ff",
-            "sound": "beep.mp3"
-        }
-    },
-    "cordova": {}
+	"appId": "com.lively.life",
+	"appName": "Lively",
+	"bundledWebRuntime": false,
+	"npmClient": "npm",
+	"webDir": "build",
+	"windowsAndroidStudioPath": "C:\\Tools\\android\\bin\\studio64.exe",
+	"plugins": {
+		"SplashScreen": {
+			"backgroundColor": "#000",
+			"launchShowDuration": 60000,
+			"androidSplashResourceName": "splash_background"
+		},
+		"LocalNotifications": {
+			"smallIcon": "ic_stat_name",
+			"iconColor": "#1395ff",
+			"sound": "beep.mp3"
+		}
+	},
+	"cordova": {}
 }

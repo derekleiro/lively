@@ -67,7 +67,7 @@ import {
 	set_battery_opt,
 	set_donation_member,
 	activate_bnav_limit,
-	reset_bnav_limit
+	reset_bnav_limit,
 } from "./actions/home_feed";
 
 const sound = new Howl({
@@ -226,26 +226,30 @@ const App = () => {
 	};
 
 	useEffect(() => {
-		if (products.length === 0) {
-			registerItems().then(() => {
-				Store.ready(() => {
-					dispatch(dispatch_donation_items(Store.products));
-				});
+		registerItems().then(() => {
+			Store.ready(() => {
+				dispatch(dispatch_donation_items(Store.products));
 			});
-		}
+		});
 
 		if (isPlatform("android") || isPlatform("ios")) {
 			Store.when(DONATION_IDS[5]).owned((p) => {
 				dispatch(set_donation_member);
 			});
 		}
+		
+		notify();
 
+		const app_starts = JSON.parse(localStorage.getItem("app_starts"));
+		localStorage.setItem("app_starts", app_starts ? app_starts + 1 : 1);
+	}, []);
+
+	useEffect(() => {
 		const dispatchMode = async () => {
 			const localMode = localStorage.getItem("darkMode");
 
 			if (localMode === null) {
 				await Toast.requestPermissions();
-
 				const timestamp_intial = new Date();
 
 				localStorage.setItem("today_timestamp", timestamp_intial);
@@ -340,15 +344,9 @@ const App = () => {
 		};
 
 		dispatchMode();
-		notify();
-
 		if (isPlatform("android")) {
 			handleBatteryOptimisations();
 		}
-
-		const app_starts = JSON.parse(localStorage.getItem("app_starts"));
-		localStorage.setItem("app_starts", app_starts ? app_starts + 1 : 1);
-
 		const focus_ongoing = JSON.parse(localStorage.getItem("focus"));
 
 		const fetch = async (data) => {

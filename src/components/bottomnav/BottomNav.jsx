@@ -33,6 +33,7 @@ import {
 	todos_clear,
 	todo_repeat_option,
 	dispatch_completed_goals,
+	textarea_state,
 } from "../../actions/add_feed";
 import Dexie from "dexie";
 
@@ -67,6 +68,8 @@ const BottomNav = (props) => {
 	const bottom_nav_limit_state = useSelector(
 		(state) => state.bottom_nav_limit_state
 	);
+	const tip_state = useSelector((state) => state.tip_state);
+	const switch_to_add = useSelector((state) => state.addfeed_switch);
 
 	const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
 	const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
@@ -537,6 +540,9 @@ const BottomNav = (props) => {
 					to="/add"
 					onClick={() => {
 						dispatch(todo_repeat_option("Never"));
+						if (tip_state === 0) {
+							dispatch(textarea_state(true));
+						}
 						cleanup();
 					}}
 				>
