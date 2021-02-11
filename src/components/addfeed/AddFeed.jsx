@@ -493,6 +493,7 @@ const AddFeed = () => {
 
 	useEffect(() => {
 		return () => {
+			dispatch(textarea_state(false));
 			if (goal_index) {
 				dispatch(clear_completed_goals);
 			}
