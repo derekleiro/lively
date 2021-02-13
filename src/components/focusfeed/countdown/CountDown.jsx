@@ -76,7 +76,7 @@ const CountDown = (props) => {
 	const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
 	const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
 	const month_timestamp = Date.parse(localStorage.getItem("month_timestamp"));
-	const data_local = JSON.parse(localStorage.getItem("focus"));
+	const data_local = JSON.parse(localStorage.getItem("focus_extra"));
 
 	let timer_interval;
 
@@ -392,8 +392,6 @@ const CountDown = (props) => {
 				dispatch(edit_timer_feed_week(data_));
 			}
 		}
-
-		return "feedback";
 	};
 
 	const notify = async () => {
@@ -462,10 +460,8 @@ const CountDown = (props) => {
 					props.handleTimeSet();
 					setDone(true);
 					remove_notif();
-					save_session().then((feedback) => {
-						if (feedback) {
-							localStorage.removeItem("focus");
-						}
+					save_session().then(() => {
+						localStorage.removeItem("focus");
 					});
 					clearInterval(timer_interval);
 				}

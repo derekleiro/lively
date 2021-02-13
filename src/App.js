@@ -237,7 +237,7 @@ const App = () => {
 				dispatch(set_donation_member);
 			});
 		}
-		
+
 		notify();
 
 		const app_starts = JSON.parse(localStorage.getItem("app_starts"));
