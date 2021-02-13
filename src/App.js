@@ -93,7 +93,6 @@ const App = () => {
 	const history = useHistory();
 
 	const darkMode = useSelector((state) => state.dark_mode);
-	const products = useSelector((state) => state.donation.items);
 
 	const month = moment(new Date()).format("MMMM");
 	const year = moment(new Date()).format("yyyy");
@@ -179,7 +178,7 @@ const App = () => {
 		window.cordova.plugins.DozeOptimize.IsIgnoringBatteryOptimizations(
 			(response) => {
 				console.log("IsIgnoringBatteryOptimizations: " + response);
-				if (response == "false") {
+				if (response === "false") {
 					dispatch(reset_battery_opt);
 				} else {
 					dispatch(set_battery_opt);
