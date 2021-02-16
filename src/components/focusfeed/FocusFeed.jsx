@@ -59,7 +59,7 @@ const FocusFeed = () => {
 		setTimerOn(true);
 		setWarningOn(false);
 		localStorage.setItem("focus", JSON.stringify(localData));
-		localStorage.setItem("focus_extra", JSON.stringify(localData));
+		localStorage.setItem("extra_data", JSON.stringify(localData));
 	};
 
 	const handleFocus = () => {
@@ -95,7 +95,7 @@ const FocusFeed = () => {
 			dispatch(clear_focus);
 			dispatch(focus_done(false));
 			localStorage.removeItem("focus");
-			localStorage.removeItem("focus_extra");
+			localStorage.removeItem("extra_data");
 			dispatch(todo_tag_selected({ tag: null, id: null }));
 		};
 	}, [dispatch]);

@@ -69,6 +69,7 @@ const CountDown = (props) => {
 	const [secs, setSecs] = useState(0);
 	const [hours, setHours] = useState(0);
 	const [done, setDone] = useState(false);
+	const [data_local, setDataLocal] = useState(JSON.parse(localStorage.getItem("extra_data")));
 
 	const month = moment(new Date()).format("MMMM");
 	const year = moment(new Date()).format("yyyy");
@@ -76,7 +77,6 @@ const CountDown = (props) => {
 	const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
 	const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
 	const month_timestamp = Date.parse(localStorage.getItem("month_timestamp"));
-	const data_local = JSON.parse(localStorage.getItem("focus_extra"));
 
 	let timer_interval;
 
@@ -172,9 +172,9 @@ const CountDown = (props) => {
 					month,
 					year,
 					createdAt: new Date(),
-					totalFocus: data_local.time || 0,
+					totalFocus: data_local.time,
 					tasksFocus: 0,
-					goalsFocus: data_local.time || 0,
+					goalsFocus: data_local.time,
 					completedGoals: 0,
 					completedTasks: 0,
 				};
@@ -186,8 +186,8 @@ const CountDown = (props) => {
 
 				session_add({
 					tasks: 0,
-					goals: data_local.time || 0,
-					total: data_local.time || 0,
+					goals: data_local.time,
+					total: data_local.time,
 					todos_count: 0,
 					goals_count: 0,
 				});
@@ -195,9 +195,9 @@ const CountDown = (props) => {
 				const data_ = {
 					tasks: 0,
 					goals: 0,
-					totalFocus: data_local.time || 0,
+					totalFocus: data_local.time,
 					tasksFocus: 0,
-					goalsFocus: data_local.time || 0,
+					goalsFocus: data_local.time,
 				};
 
 				dispatch(edit_timer_feed_today(data_));
@@ -224,8 +224,8 @@ const CountDown = (props) => {
 					month,
 					year,
 					createdAt: new Date(),
-					totalFocus: data_local.time || 0,
-					tasksFocus: data_local.time || 0,
+					totalFocus: data_local.time,
+					tasksFocus: data_local.time,
 					goalsFocus: 0,
 					completedGoals: 0,
 					completedTasks: 0,
@@ -237,9 +237,9 @@ const CountDown = (props) => {
 				}
 
 				session_add({
-					tasks: data_local.time || 0,
+					tasks: data_local.time,
 					goals: 0,
-					total: data_local.time || 0,
+					total: data_local.time,
 					todos_count: 0,
 					goals_count: 0,
 				});
@@ -249,14 +249,14 @@ const CountDown = (props) => {
 						dispatch(
 							edit_chart_data({
 								id: data_local.tag_id,
-								focustime: data_local.time || 0,
+								focustime: data_local.time,
 							})
 						);
 
 						dispatch(
 							most_focused_edit({
 								id: data_local.tag_id,
-								focustime: data_local.time || 0,
+								focustime: data_local.time,
 								data: chart_data,
 							})
 						);
@@ -270,16 +270,16 @@ const CountDown = (props) => {
 
 					const data_ = {
 						id: data_local.tag_id,
-						total_focus: data_local.time || 0,
+						total_focus: data_local.time,
 						name: data_local.tag,
 						today: {
-							focused: data_local.time || 0,
+							focused: data_local.time,
 						},
 						week: {
-							focused: data_local.time || 0,
+							focused: data_local.time,
 						},
 						month: {
-							focused: data_local.time || 0,
+							focused: data_local.time,
 						},
 					};
 
@@ -289,8 +289,8 @@ const CountDown = (props) => {
 				const data_2 = {
 					tasks: 0,
 					goals: 0,
-					totalFocus: data_local.time || 0,
-					tasksFocus: data_local.time || 0,
+					totalFocus: data_local.time,
+					tasksFocus: data_local.time,
 					goalsFocus: 0,
 				};
 
@@ -319,14 +319,14 @@ const CountDown = (props) => {
 						dispatch(
 							edit_chart_data({
 								id: data_local.tag_id,
-								focustime: data_local.time || 0,
+								focustime: data_local.time,
 							})
 						);
 
 						dispatch(
 							most_focused_edit({
 								id: data_local.tag_id,
-								focustime: data_local.time || 0,
+								focustime: data_local.time,
 								data: chart_data,
 							})
 						);
@@ -340,16 +340,16 @@ const CountDown = (props) => {
 
 					const data_ = {
 						id: data_local.tag_id,
-						total_focus: data_local.time || 0,
+						total_focus: data_local.time,
 						name: data_local.tag,
 						today: {
-							focused: data_local.time || 0,
+							focused: data_local.time,
 						},
 						week: {
-							focused: data_local.time || 0,
+							focused: data_local.time,
 						},
 						month: {
-							focused: data_local.time || 0,
+							focused: data_local.time,
 						},
 					};
 
@@ -360,7 +360,7 @@ const CountDown = (props) => {
 					month,
 					year,
 					createdAt: new Date(),
-					totalFocus: data_local.time || 0,
+					totalFocus: data_local.time,
 					tasksFocus: 0,
 					goalsFocus: 0,
 					completedGoals: 0,
@@ -375,7 +375,7 @@ const CountDown = (props) => {
 				session_add({
 					tasks: 0,
 					goals: 0,
-					total: data_local.time || 0,
+					total: data_local.time,
 					todos_count: 0,
 					goals_count: 0,
 				});
@@ -383,7 +383,7 @@ const CountDown = (props) => {
 				const data_ = {
 					tasks: 0,
 					goals: 0,
-					totalFocus: data_local.time || 0,
+					totalFocus: data_local.time,
 					tasksFocus: 0,
 					goalsFocus: 0,
 				};
@@ -431,7 +431,7 @@ const CountDown = (props) => {
 					{
 						title: "Keep it going! 🎉🎊",
 						body: `You have successfully focused for ${readableTime(
-							data_local.time || 0
+							data_local.time
 						)} ${data_local.type !== null ? `on your ${data_local.type}` : ""}`,
 						id: 111222333,
 						schedule: { at: data_local.event_time },
@@ -485,8 +485,10 @@ const CountDown = (props) => {
 		notify();
 
 		if (!unmounted) {
-			startTimer();
+			setDataLocal(JSON.parse(localStorage.getItem("extra_data")))
 		}
+
+		startTimer();
 
 		return () => {
 			terminate_countdown();

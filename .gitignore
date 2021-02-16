@@ -7,6 +7,9 @@
 package-lock.json
 yarn-lock.json
 google-services.json
+electron
+dist
+release-builds
 
 # testing
 /coverage

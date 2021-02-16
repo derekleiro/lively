@@ -95,7 +95,7 @@ const Today = (props) => {
                             ? `${readableTime(props.tasksFocus)}`
                             : "N/A"}
                     </div>
-                    <div className="_title">Focused (Tasks)</div>
+                    <div className="_title">Focused on Tasks</div>
                 </div>
 
                 <div className="_highlight">
@@ -104,7 +104,7 @@ const Today = (props) => {
                             ? `${readableTime(props.goalsFocus)}`
                             : "N/A"}
                     </div>
-                    <div className="_title">Focused (Goals)</div>
+                    <div className="_title">Focused on Goals</div>
                 </div>
             </div>
         </div>
