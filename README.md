@@ -8,4 +8,5 @@ If you have found a bug or problem or just have a suggestion, open a new issue
 
 # Contribution
 
-If you want to contribute, then create a branch, work on your branch, push to your branch and open a pull request
+If you want to contribute, then create a branch, work on your branch, push to your branch and open a pull request.
+In your pull request, describe your changes and happy coding! 🚀
