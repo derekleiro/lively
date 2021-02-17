@@ -90,7 +90,9 @@ const Goal = (props) => {
                 return `${hours} hour`;
             }
         } else if (minutes > 60 && minutes < 120) {
-            return `${hours} hour ${minutes % 60} minutes`;
+            return `${hours} hours ${minutes % 60} minutes`;
+        } else{
+            return `${hours} hours ${minutes % 60 !== 0 ? ` ${minutes % 60} minutes` : ``}`;
         }
     };
 

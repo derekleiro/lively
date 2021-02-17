@@ -69,7 +69,9 @@ const CountDown = (props) => {
 	const [secs, setSecs] = useState(0);
 	const [hours, setHours] = useState(0);
 	const [done, setDone] = useState(false);
-	const [data_local, setDataLocal] = useState(JSON.parse(localStorage.getItem("extra_data")));
+	const [data_local, setDataLocal] = useState(
+		JSON.parse(localStorage.getItem("extra_data"))
+	);
 
 	const month = moment(new Date()).format("MMMM");
 	const year = moment(new Date()).format("yyyy");
@@ -157,8 +159,10 @@ const CountDown = (props) => {
 				return `${hours} hour`;
 			}
 		} else if (minutes > 60 && minutes < 120) {
-			return `${hours} hour ${minutes % 60} minutes`;
-		}
+            return `${hours} hours ${minutes % 60} minutes`;
+        } else{
+            return `${hours} hours ${minutes % 60 !== 0 ? ` ${minutes % 60} minutes` : ``}`;
+        }
 	};
 
 	const save_session = async () => {
@@ -208,13 +212,13 @@ const CountDown = (props) => {
 						return goal.goal_url === data_local.url;
 					})
 					.modify((goal) => {
-						goal.focustime = goal.focustime + data_local.time || goal.focustime;
+						goal.focustime = goal.focustime + data_local.time;
 
 						if (goals_state.length !== 0) {
 							dispatch(
 								goal_focus_edit({
 									url: data_local.url,
-									focustime: goal.focustime + data_local.time || goal.focustime,
+									focustime: goal.focustime + data_local.time,
 								})
 							);
 						}
@@ -302,13 +306,13 @@ const CountDown = (props) => {
 						return todo.todo_url === data_local.url;
 					})
 					.modify((todo) => {
-						todo.focustime = todo.focustime + data_local.time || todo.focustime;
+						todo.focustime = todo.focustime + data_local.time;
 
 						if (home_todos.length !== 0) {
 							dispatch(
 								todo_focus_edit({
 									url: data_local.url,
-									focustime: todo.focustime + data_local.time || todo.focustime,
+									focustime: todo.focustime + data_local.time,
 								})
 							);
 						}
@@ -485,7 +489,7 @@ const CountDown = (props) => {
 		notify();
 
 		if (!unmounted) {
-			setDataLocal(JSON.parse(localStorage.getItem("extra_data")))
+			setDataLocal(JSON.parse(localStorage.getItem("extra_data")));
 		}
 
 		startTimer();
