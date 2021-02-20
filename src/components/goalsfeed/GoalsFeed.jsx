@@ -11,7 +11,7 @@ import Done from "../done/Done";
 import goal from "../../assets/icons/goal_color.png";
 import loading from "../../assets/icons/loading.gif";
 
-import { add_switch_goal } from "../../actions/add_feed";
+import { add_switch_goal, textarea_state } from "../../actions/add_feed";
 import { add_goal_timeout } from "../../actions/timeouts";
 
 const GoalsFeed = () => {
@@ -23,6 +23,7 @@ const GoalsFeed = () => {
             return goalB.createdAt - goalA.createdAt;
         }
     );
+	const tip_state = useSelector((state) => state.tip_state);
 
     const completed_goals = useSelector(
         (state) => state.completed_goals.completed
@@ -85,6 +86,9 @@ const GoalsFeed = () => {
                         to="/add"
                         onClick={() => {
                             dispatch(add_switch_goal);
+                            if (tip_state === 0) {
+                                dispatch(textarea_state(true));
+                            }
                         }}
                     >
                         <div style={style.new}>+ New Goal</div>

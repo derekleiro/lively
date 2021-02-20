@@ -392,6 +392,7 @@ const App = () => {
 									todo.complete = 1;
 									todo.date_completed = new Date();
 
+									dispatch(activate_bnav_limit);
 									const data_1 = {
 										month,
 										year,
@@ -453,10 +454,10 @@ const App = () => {
 										position: "bottom",
 									});
 
-									setTimeout(
-										() => history.replace(`/add_${todo.todo_url}`),
-										2500
-									);
+									setTimeout(() => {
+										dispatch(reset_bnav_limit);
+										history.replace(`/add_${todo.todo_url}`);
+									}, 2500);
 								}
 							});
 					} else if (data.actionId === "create_task") {

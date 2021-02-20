@@ -69,7 +69,6 @@ const BottomNav = (props) => {
 		(state) => state.bottom_nav_limit_state
 	);
 	const tip_state = useSelector((state) => state.tip_state);
-	const switch_to_add = useSelector((state) => state.addfeed_switch);
 
 	const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
 	const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
