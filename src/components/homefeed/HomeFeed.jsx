@@ -4,7 +4,6 @@ import { Link, useHistory } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import moment from "moment";
 import Collapsible from "react-collapsible";
-import { AppRate } from "@ionic-native/app-rate";
 import { isPlatform } from "@ionic/react";
 
 import "./home-feed.css";
@@ -327,29 +326,11 @@ const HomeFeed = () => {
 									color: "#1395ff",
 								}}
 								onClick={() => {
-									AppRate.setPreferences = {
-										displayAppName: "Lively",
-										inAppReview: true,
-										storeAppURL: {
-											// ios: "<app_id>", Coming soon
-											android: "market://details?id=com.lively.life",
-										},
-										customLocale: {
-											title: "Did you find %@ useful?",
-											message: "I would love to here from you 😊",
-											cancelButton: "Not today",
-											laterButtonLabel: "Remind me later",
-											rateButtonLabel: "Let's goo!",
-											cancelButtonLabel: "Not today",
-											yesButtonLabel: "Yes!",
-											noButtonLabel: "Not really",
-											appRatePromptTitle: "Did you find %@ useful?",
-											feedbackPromptTitle: "I would love to here from you 😊",
-										},
-										// TODO Remember to include iOS
-										openUrl: "market://details?id=com.lively.life",
-									};
-									AppRate.promptForRating(true);
+									// TODO add iOS link when it's available
+									window.open(
+										"https://play.google.com/store/apps/details?id=com.lively.life",
+										"_blank"
+									);
 									setShowModalReview(false);
 								}}
 							>

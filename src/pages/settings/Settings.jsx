@@ -5,7 +5,6 @@ import { Plugins } from "@capacitor/core";
 import { InAppPurchase2 as Store } from "@ionic-native/in-app-purchase-2";
 import { useHistory } from "react-router-dom";
 import LazyLoad from "react-lazyload";
-import { AppRate } from "@ionic-native/app-rate";
 import { isPlatform } from "@ionic/react";
 
 import Done from "../../components/done/Done";
@@ -80,30 +79,8 @@ const Settings = () => {
 	};
 
 	const handleReview = () => {
-		AppRate.setPreferences = {
-			displayAppName: "Lively",
-			inAppReview: true,
-			storeAppURL: {
-				// ios: "<app_id>", Coming soon
-				android: "market://details?id=com.lively.life",
-			},
-			customLocale: {
-				title: "Did you find %@ useful?",
-				message: "I would love to here from you 😊",
-				cancelButton: "Not today",
-				laterButtonLabel: "Remind me later",
-				rateButtonLabel: "Let's goo!",
-				cancelButtonLabel: "Not today",
-				yesButtonLabel: "Yes!",
-				noButtonLabel: "Not really",
-				appRatePromptTitle: "Did you find %@ useful?",
-				feedbackPromptTitle: "I would love to here from you 😊",
-			},
-			// TODO Remember to include iOS
-			openUrl: "market://details?id=com.lively.life",
-		};
-
-		AppRate.promptForRating(true);
+		// TODO add iOS link when it's available
+		window.open("https://play.google.com/store/apps/details?id=com.lively.life", "_blank")
 	};
 
 	const handleEvents = async () => {
@@ -521,7 +498,7 @@ const Settings = () => {
 							color: "grey",
 						}}
 					>
-						Lively v1.11 build #11
+						Lively v1.12 build #12
 					</div>
 				</div>
 			</div>
