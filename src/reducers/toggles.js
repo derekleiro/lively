@@ -1,3 +1,14 @@
+export const UrgentCollapseReducer = (state = 0, action) => {
+    switch (action.type) {
+        case "ADD_URGENT_COLLAPSE":
+            return (state = state + 1);
+        case "RESET_URGENT_COLLAPSE":
+            return (state = 0);
+        default:
+            return state;
+    }
+};
+
 export const EarlierCollapseReducer = (state = 0, action) => {
     switch (action.type) {
         case "ADD_EARLIER_COLLAPSE":

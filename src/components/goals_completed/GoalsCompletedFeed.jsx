@@ -47,7 +47,7 @@ const GoalsCompletedFeed = () => {
 
     const goalDB = new Dexie("LivelyGoals");
     goalDB.version(1).stores({
-        goals: `goal_url,title,desc,steps,notes,focustime,date_completed,goal_url,complete`,
+        goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
     });
 
     const style = {
@@ -206,8 +206,11 @@ const GoalsCompletedFeed = () => {
                                                             complete={
                                                                 goal.complete
                                                             }
+                                                            date_completed={goal.date_completed}
                                                             completedView={true}
                                                             goal={goal}
+                                                            tag={goal.tag ? goal.tag : null}
+                                                            tag_id={goal.tag_id ? goal.tag_id : null}
                                                         />
                                                     </div>
                                                 </CellMeasurer>

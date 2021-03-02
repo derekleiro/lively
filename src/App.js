@@ -69,6 +69,7 @@ import {
 	activate_bnav_limit,
 	reset_bnav_limit,
 } from "./actions/home_feed";
+import FullReport from "./pages/full_report/FullReport";
 
 const sound = new Howl({
 	src: [completed_sound],
@@ -96,55 +97,52 @@ const App = () => {
 
 	const month = moment(new Date()).format("MMMM");
 	const year = moment(new Date()).format("yyyy");
+	
+	const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+	const randomInRange = (min, max) => {
+		return Math.random() * (max - min) + min;
+	};
 
 	const celebration = {
 		wohoo: () => {
-			var count = 100;
-			var defaults = {
-				origin: { y: 0.7 },
-			};
-
-			const fire = (particleRatio, opts) => {
+			let count = 0;
+			const interval = setInterval(() => {
+				const particleCount = 50;
 				confetti(
-					Object.assign({}, defaults, opts, {
-						particleCount: Math.floor(count * particleRatio),
+					Object.assign({}, defaults, {
+						particleCount,
+						origin: {
+							x: randomInRange(0.1, 0.3),
+							y: Math.random() - 0.2,
+						},
 					})
 				);
-			};
-
-			fire(0.25, {
-				spread: 26,
-				startVelocity: 55,
-			});
-			fire(0.2, {
-				spread: 60,
-			});
-			fire(0.35, {
-				spread: 100,
-				decay: 0.91,
-				scalar: 0.8,
-			});
-			fire(0.1, {
-				spread: 120,
-				startVelocity: 25,
-				decay: 0.92,
-				scalar: 1.2,
-			});
-			fire(0.1, {
-				spread: 120,
-				startVelocity: 45,
-			});
+				confetti(
+					Object.assign({}, defaults, {
+						particleCount,
+						origin: {
+							x: randomInRange(0.7, 0.9),
+							y: Math.random() - 0.2,
+						},
+					})
+				);
+				count = count + 1;
+				if (count >= 3) {
+					clearInterval(interval);
+				}
+			}, 333);
 		},
 	};
 
 	const goalDB = new Dexie("LivelyGoals");
 	goalDB.version(1).stores({
-		goals: `goal_url,title,desc,steps,notes,focustime,date_completed,goal_url,complete`,
+		goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
 	});
 
 	const todoDB = new Dexie("LivelyTodos");
 	todoDB.version(1).stores({
-		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
 	});
 
 	const androidLightTheme = async () => {
@@ -420,6 +418,7 @@ const App = () => {
 										notes: { notes: todo.notes.notes },
 										complete: todo.complete,
 										important: todo.important,
+										urgent: todo.urgent ? todo.urgent : "No",
 									}).then((data) => {
 										if (data) {
 											const dispatch_timeout = setTimeout(() => {
@@ -521,6 +520,7 @@ const App = () => {
 					component={GoalsCompleted}
 				/>
 				<Route path="/timer" exact={true} component={Timer} />
+				<Route path="/full_report" exact={true} component={FullReport} />
 				<Route path="/focus" exact={true} component={Focus} />
 				<Route path="/focus_:id" exact={true} component={Focus} />
 				<Route path="/list_:id" exact={true} component={ListView} />

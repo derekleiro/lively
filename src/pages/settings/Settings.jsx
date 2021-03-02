@@ -70,9 +70,9 @@ const Settings = () => {
 
 	const handleShare = async () => {
 		await Share.share({
-			title: "Lively - Todo, Goals, Focus & Productivity Tracker",
+			title: `Lively - Todo List, Goals, Focus, Time Tracking`,
 			text:
-				"Lively is an Ad-free Opensource, Todo & Goals list, Focus & Productivity app",
+				"100% FREE 🌟 to do list✔ , goals list🚀, focus🎯, productivity & time tracker⌚",
 			url: "https://play.google.com/store/apps/details?id=com.lively.life", // TODO Change this later to also include iOS app store id
 			dialogTitle: "Take charge of your life today!",
 		});
@@ -80,7 +80,10 @@ const Settings = () => {
 
 	const handleReview = () => {
 		// TODO add iOS link when it's available
-		window.open("https://play.google.com/store/apps/details?id=com.lively.life", "_blank")
+		window.open(
+			"https://play.google.com/store/apps/details?id=com.lively.life",
+			"_blank"
+		);
 	};
 
 	const handleEvents = async () => {
@@ -224,7 +227,7 @@ const Settings = () => {
 								/>
 								<div className="done_text">
 									Unfortunately there was a problem processing your donation.
-									But you can always try again. Thank You! ❤
+									But you can always try again. Thank you! ❤
 								</div>
 								<span
 									className="action_button"
@@ -307,7 +310,7 @@ const Settings = () => {
 						className="text"
 						style={{ marginTop: "15px", marginBottom: "20px" }}
 					>
-						This app goes best with the{" "}
+						Lively goes best with{" "}
 						<a
 							href="https://play.google.com/store/apps/details?id=com.mindefy.phoneaddiction.mobilepe&hl=en&gl=US"
 							target="_blank"
@@ -315,18 +318,27 @@ const Settings = () => {
 						>
 							Your Hour
 						</a>{" "}
-						or{" "}
+						and{" "}
 						<a
-							href="https://play.google.com/store/apps/details?id=com.stayfocused&hl=en&gl=US"
+							href="ttps://play.google.com/store/apps/details?id=co.thefabulous.app"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							Stay Focused
+							Fabulous
 						</a>{" "}
-						apps. I don't own the any of the apps, but I think it will help alot
-						of you. It limits app usage on your phone (like those addictive
-						apps). I believe YOU can turn your life around and be who you want
-						to be and you should believe in yourself too! All the best ❤
+						. Lively to help you keep track of your time and get tasks and goals
+						done, Fabulous to make that into a habit and YourHour to limit
+						distractions. You can also get{" "}
+						<a
+							href="https://getcoldturkey.com/"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							Cold Turkey
+						</a>{" "}
+						on your pc to limit pc distractions. I don't own Fabulous, Cold
+						Turkey or YourHour but I think it will help alot of you. All the
+						best ❤
 					</div>
 
 					<div id="donate_section" ref={donation_section}>
@@ -335,17 +347,16 @@ const Settings = () => {
 							className="text"
 							style={{ marginTop: "15px", marginBottom: "20px" }}
 						>
-							Lively is a completely free (and ad-free) todo list, goals and
-							productivity tracker with postive reinforcement. Hello, my name is
-							Derek Leiro, an 18 year old kid from Kenya. I hope this app has
-							really helped you be productive. I intend to make this app free
-							and ad-free forever. If this app has helped you out, consider
-							donating below It would mean alot. Thank you for using this app.
-							If you are experiencing issues or have suggestions on
-							improvements, click on the report/suggest button below (I read
-							every single email and I will try my best to implement any
-							request. Just bare in mind that I am alone, also have school, so
-							just hang in there! I will try my best)
+							Lively is a 100% free todo list, goals and productivity tracker
+							with postive reinforcement. Hello, my name is Derek Leiro, an 18
+							year old kid from Kenya. I hope this app has really helped you be
+							productive. I intend to make this app free and ad-free forever. If
+							this app has helped you out, consider donating below It would mean
+							alot. Thank you for using this app. If you are experiencing issues
+							or have suggestions on improvements, click on the report/suggest
+							button below (I read every single email and I will try my best to
+							implement any request. Just bare in mind that I am alone, also
+							have school, so just hang in there! I will try my best)
 						</div>
 
 						{products.map((product, index) => {
@@ -413,10 +424,8 @@ const Settings = () => {
 						style={{ marginTop: "15px", marginBottom: "20px" }}
 					>
 						Lively does not collect personal information. All the data (todos,
-						productivity time & todo lists) is stored on your phone, I do not
-						have ad networks as Lively is and will be ad-free & OpenSource. If
-						you choose to back up your data, it is stored in your Google account
-						(Google Drive) -- Coming soon!
+						productivity time, lists & goals) is stored on your phone. Lively is
+						and will be free, ad-free & OpenSource.
 					</div>
 
 					<span className="title">Technical</span>

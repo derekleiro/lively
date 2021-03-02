@@ -36,7 +36,7 @@ const DueDate = () => {
 
     const todoDB = new Dexie("LivelyTodos");
     todoDB.version(1).stores({
-        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
     });
 
     const [selecting, setSelecting] = useState(false);
@@ -52,21 +52,21 @@ const DueDate = () => {
             color: darkMode ? "white" : "black",
             border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
             background: "transparent",
-            height: "30px",
+            height: "auto",
             padding: "7.5px 7.5px 7.5px 15px",
         },
         style2: {
             color: darkMode ? "white" : "black",
             border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
             background: "transparent",
-            height: "100px",
+            height: "auto",
         },
         style3: {
             color: darkMode ? "white" : "black",
             border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
             background: "transparent",
-            height: "300px",
-            maxHeight: "300px",
+            height: "auto",
+            maxHeight: "500px",
             padding: "7.5px 7.5px 7.5px 15px",
         },
     };
@@ -90,7 +90,7 @@ const DueDate = () => {
                 dispatch(todo_due_date(new Date()));
 
                 if (switch_to_add === "add_") {
-                    if (back_index === "home" || home_todos.length !== 0) {
+                    if (back_index === "home" && home_todos.length !== 0) {
                         dispatch(
                             todo_edit({
                                 dueDate: new Date(),
@@ -113,7 +113,7 @@ const DueDate = () => {
                 );
 
                 if (switch_to_add === "add_") {
-                    if (back_index === "home" || home_todos.length !== 0) {
+                    if (back_index === "home" && home_todos.length !== 0) {
                         dispatch(
                             todo_edit({
                                 dueDate: new Date().setDate(
@@ -146,7 +146,7 @@ const DueDate = () => {
         dispatch(todo_due_date(selected ? selected : null));
 
         if (switch_to_add === "add_") {
-            if (back_index === "home" || home_todos.length !== 0) {
+            if (back_index === "home" && home_todos.length !== 0) {
                 dispatch(
                     todo_edit({
                         dueDate: selected,

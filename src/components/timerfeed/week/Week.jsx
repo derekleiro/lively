@@ -16,27 +16,27 @@ const Week = (props) => {
     const [week_state, setWeekState] = useState(false);
 
     const readableTime = (time) => {
-        const hours = Math.floor(time / 3600);
-        const minutes = Math.floor(time / 60);
+		const hours = Math.floor(time / 3600);
+		const minutes = Math.floor(time / 60);
 
-        if (minutes === 1) {
-            return `${minutes} minute`;
-        } else if (minutes < 1) {
-            return `Less than a minute`;
-        } else if (minutes < 60 && minutes > 1) {
-            return `${minutes} minutes`;
-        } else if (time % 3600 === 0) {
-            if (time > 3600) {
-                return `${hours} hours`;
-            } else if (time === 3600) {
-                return `${hours} hour`;
-            }
-        } else if (minutes > 60 && minutes < 120) {
-            return `${hours} hours ${minutes % 60} minutes`;
+		if (minutes === 1) {
+			return `${minutes} mins`;
+		} else if (minutes < 1) {
+			return `Less than a minute`;
+		} else if (minutes < 60 && minutes > 1) {
+			return `${minutes} mins`;
+		} else if (time % 3600 === 0) {
+			if (time > 3600) {
+				return `${hours} h`;
+			} else if (time === 3600) {
+				return `${hours} h`;
+			}
+		} else if (minutes > 60 && minutes < 120) {
+            return `${hours} h ${minutes % 60} mins`;
         } else{
-            return `${hours} hours ${minutes % 60 !== 0 ? ` ${minutes % 60} minutes` : ``}`;
+            return `${hours} h ${minutes % 60 !== 0 ? ` ${minutes % 60} mins` : ``}`;
         }
-    };
+	};
 
     useEffect(() => {
         let unmounted = false;

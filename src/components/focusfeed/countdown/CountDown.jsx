@@ -89,12 +89,12 @@ const CountDown = (props) => {
 
 	const goalDB = new Dexie("LivelyGoals");
 	goalDB.version(1).stores({
-		goals: `goal_url,title,desc,steps,notes,focustime,date_completed,goal_url,complete`,
+		goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
 	});
 
 	const todoDB = new Dexie("LivelyTodos");
 	todoDB.version(1).stores({
-		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
 	});
 
 	const tagDB = new Dexie("LivelyTags");
@@ -102,43 +102,40 @@ const CountDown = (props) => {
 		tags: `id,total_focus,today,week,month`,
 	});
 
+	const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+	const randomInRange = (min, max) => {
+		return Math.random() * (max - min) + min;
+	};
+
 	const celebration = {
 		wohoo: () => {
-			var count = 100;
-			var defaults = {
-				origin: { y: 0.7 },
-			};
-
-			const fire = (particleRatio, opts) => {
+			let count = 0;
+			const interval = setInterval(() => {
+				const particleCount = 50;
 				confetti(
-					Object.assign({}, defaults, opts, {
-						particleCount: Math.floor(count * particleRatio),
+					Object.assign({}, defaults, {
+						particleCount,
+						origin: {
+							x: randomInRange(0.1, 0.3),
+							y: Math.random() - 0.2,
+						},
 					})
 				);
-			};
-
-			fire(0.25, {
-				spread: 26,
-				startVelocity: 55,
-			});
-			fire(0.2, {
-				spread: 60,
-			});
-			fire(0.35, {
-				spread: 100,
-				decay: 0.91,
-				scalar: 0.8,
-			});
-			fire(0.1, {
-				spread: 120,
-				startVelocity: 25,
-				decay: 0.92,
-				scalar: 1.2,
-			});
-			fire(0.1, {
-				spread: 120,
-				startVelocity: 45,
-			});
+				confetti(
+					Object.assign({}, defaults, {
+						particleCount,
+						origin: {
+							x: randomInRange(0.7, 0.9),
+							y: Math.random() - 0.2,
+						},
+					})
+				);
+				count = count + 1;
+				if (count >= 3) {
+					clearInterval(interval);
+				}
+			}, 333);
 		},
 	};
 
@@ -147,22 +144,64 @@ const CountDown = (props) => {
 		const minutes = Math.floor(time / 60);
 
 		if (minutes === 1) {
-			return `${minutes} minute`;
+			return `${minutes} mins`;
 		} else if (minutes < 1) {
 			return `Less than a minute`;
 		} else if (minutes < 60 && minutes > 1) {
-			return `${minutes} minutes`;
+			return `${minutes} mins`;
 		} else if (time % 3600 === 0) {
 			if (time > 3600) {
-				return `${hours} hours`;
+				return `${hours} h`;
 			} else if (time === 3600) {
-				return `${hours} hour`;
+				return `${hours} h`;
 			}
 		} else if (minutes > 60 && minutes < 120) {
-            return `${hours} hours ${minutes % 60} minutes`;
-        } else{
-            return `${hours} hours ${minutes % 60 !== 0 ? ` ${minutes % 60} minutes` : ``}`;
-        }
+			return `${hours} h ${minutes % 60} mins`;
+		} else {
+			return `${hours} h ${minutes % 60 !== 0 ? ` ${minutes % 60} mins` : ``}`;
+		}
+	};
+
+	const save_tag = () => {
+		if (chart_data.today !== null && chart_data.week !== null) {
+			dispatch(
+				edit_chart_data({
+					id: data_local.tag_id,
+					focustime: data_local.time,
+				})
+			);
+
+			dispatch(
+				most_focused_edit({
+					id: data_local.tag_id,
+					focustime: data_local.time,
+					data: chart_data,
+				})
+			);
+		}
+
+		const time = {
+			today: today_timestamp,
+			week: week_timestamp,
+			month: month_timestamp,
+		};
+
+		const data_ = {
+			id: data_local.tag_id,
+			total_focus: data_local.time,
+			name: data_local.tag,
+			today: {
+				focused: data_local.time,
+			},
+			week: {
+				focused: data_local.time,
+			},
+			month: {
+				focused: data_local.time,
+			},
+		};
+
+		tag_(data_, time);
 	};
 
 	const save_session = async () => {
@@ -207,6 +246,10 @@ const CountDown = (props) => {
 				dispatch(edit_timer_feed_today(data_));
 				dispatch(edit_timer_feed_week(data_));
 
+				if (data_local.tag) {
+					save_tag();
+				}
+
 				await goalDB.goals
 					.filter((goal) => {
 						return goal.goal_url === data_local.url;
@@ -249,45 +292,7 @@ const CountDown = (props) => {
 				});
 
 				if (data_local.tag) {
-					if (chart_data.today !== null && chart_data.week !== null) {
-						dispatch(
-							edit_chart_data({
-								id: data_local.tag_id,
-								focustime: data_local.time,
-							})
-						);
-
-						dispatch(
-							most_focused_edit({
-								id: data_local.tag_id,
-								focustime: data_local.time,
-								data: chart_data,
-							})
-						);
-					}
-
-					const time = {
-						today: today_timestamp,
-						week: week_timestamp,
-						month: month_timestamp,
-					};
-
-					const data_ = {
-						id: data_local.tag_id,
-						total_focus: data_local.time,
-						name: data_local.tag,
-						today: {
-							focused: data_local.time,
-						},
-						week: {
-							focused: data_local.time,
-						},
-						month: {
-							focused: data_local.time,
-						},
-					};
-
-					tag_(data_, time);
+					save_tag();
 				}
 
 				const data_2 = {
@@ -659,6 +664,7 @@ const CountDown = (props) => {
 							notes: { notes: todo.notes.notes },
 							complete: todo.complete,
 							important: todo.important,
+							urgent: todo.urgent ? todo.urgent : "No",
 						}).then((data) => {
 							if (data) {
 								dispatch(todos(data));

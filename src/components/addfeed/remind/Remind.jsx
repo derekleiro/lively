@@ -37,12 +37,15 @@ const Remind = () => {
     const switch_to_add = useSelector((state) => state.addfeed_switch);
     const desc = useSelector((state) => state.todo_desc);
     const battery_opt = useSelector((state) => state.battery_opt);
+    const todo_complete_set_state = useSelector(
+		(state) => state.todo_complete_set
+	);
 
     const notif_warn = JSON.parse(localStorage.getItem("notif_warning"));
 
     const todoDB = new Dexie("LivelyTodos");
     todoDB.version(1).stores({
-        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
     });
 
     const setTime = (timestamp) => {
@@ -100,13 +103,13 @@ const Remind = () => {
             background: darkMode ? mode.dark : mode.light,
             padding: "7.5px 7.5px 7.5px 15px",
             WebkitTapHighlightColor: "transparent",
-            height: "35px",
+            height: "auto",
         },
         style2: {
             color: darkMode ? "white" : "black",
             border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
             background: darkMode ? mode.dark : mode.light,
-            height: "515px",
+            height: "auto",
             maxHeight: "515px",
             padding: "7.5px 7.5px 7.5px 15px",
             WebkitTapHighlightColor: "transparent",
@@ -193,7 +196,7 @@ const Remind = () => {
         dispatch(todo_remind_timestamp(remindMe));
 
         if (switch_to_add === "add_") {
-            if (back_index === "home" || home_todos.length !== 0) {
+            if (back_index === "home" && home_todos.length !== 0) {
                 dispatch(
                     todo_edit({
                         remindMe,
@@ -207,15 +210,17 @@ const Remind = () => {
                     return todo.todo_url === url;
                 })
                 .modify((todo) => {
-                    schedule_notification(datum, desc, todo_index, {
-                        text: todo.desc,
-                        focustime: 0,
-                        url: todo.todo_url,
-                        type: "task",
-                        steps: todo.steps.steps,
-                        tag: todo.tag,
-                        tag_id: todo.tag_id,
-                    });
+                    if(!todo_complete_set_state){
+                        schedule_notification(datum, desc, todo_index, {
+                            text: todo.desc,
+                            focustime: 0,
+                            url: todo.todo_url,
+                            type: "task",
+                            steps: todo.steps.steps,
+                            tag: todo.tag,
+                            tag_id: todo.tag_id,
+                        });
+                    }
 
                     todo.remindMe = remindMe;
                 });
@@ -233,7 +238,7 @@ const Remind = () => {
         setSelectedDate(null);
 
         if (switch_to_add === "add_") {
-            if (back_index === "home" || home_todos.length !== 0) {
+            if (back_index === "home" && home_todos.length !== 0) {
                 dispatch(
                     todo_edit({
                         remindMe: null,

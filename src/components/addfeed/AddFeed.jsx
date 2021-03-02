@@ -35,6 +35,8 @@ import {
 	todos_clear,
 	clear_completed_goals,
 	handle_tip_state,
+	reset_date_completed,
+	reset_urgency,
 } from "../../actions/add_feed";
 
 import { home_timeout_clear } from "../../actions/timeouts";
@@ -64,6 +66,7 @@ import { session_add } from "../../util/session_add";
 import add_session from "../../util/session";
 import repeat from "../../util/repeat";
 import Done from "../done/Done";
+import Urgent from "./urgent/Urgent";
 
 const AddFeed = () => {
 	const dispatch = useDispatch();
@@ -87,6 +90,7 @@ const AddFeed = () => {
 		"Always distracted?",
 		"Start with the easiest tasks",
 		"You're more likely to procrastinate when you're tired",
+		"Lively goes best with Your Hour app and Fabulous app.",
 	];
 
 	const TIPS_SECTION_2 = [
@@ -105,6 +109,7 @@ const AddFeed = () => {
 		"Download the YourHour app. It does a great job limiting your phone distractions",
 		"This will help you build momentum to continue to tackle the harder tasks",
 		"Simply not having enough sleep can actually hold you back",
+		"Lively to help you keep track of your time and get tasks and goals done, Fabulous to make that into a habit and YourHour to limit phone distractions.",
 	];
 
 	const TIPS_SECTION_3 = [
@@ -123,6 +128,7 @@ const AddFeed = () => {
 		"I don't own the app, but I think it will really help you out",
 		"",
 		"Get enough sleep and reward yourself with a break after you have completed a task/goal",
+		"You can also get Cold Turkey on your pc to limit pc distractions",
 	];
 
 	const todo_complete_set_state = useSelector(
@@ -157,6 +163,8 @@ const AddFeed = () => {
 	const goal_index = useSelector((state) => state.goal_index);
 	const notif_state = useSelector((state) => state.notif_state);
 	const tip_state = useSelector((state) => state.tip_state);
+	const date_completed = useSelector((state) => state.date_completed);
+	const task_urgency_state = useSelector((state) => state.task_urgency_state);
 
 	const [tipNumber, setTipNumber] = useState(2);
 
@@ -202,12 +210,12 @@ const AddFeed = () => {
 
 	const todoDB = new Dexie("LivelyTodos");
 	todoDB.version(1).stores({
-		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
 	});
 
 	const goalDB = new Dexie("LivelyGoals");
 	goalDB.version(1).stores({
-		goals: `goal_url,title,desc,steps,notes,focustime,date_completed,goal_url,complete`,
+		goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
 	});
 
 	const listDB = new Dexie("LivelyLists");
@@ -246,6 +254,18 @@ const AddFeed = () => {
 		}
 	};
 
+	const readableTime = (timestamp) => {
+		if (moment(timestamp).calendar().includes("Yesterday")) {
+			return "Yesterday";
+		} else if (moment(timestamp).calendar().includes("Today")) {
+			return "Today";
+		} else if (moment(timestamp).calendar().includes("Tomorrow")) {
+			return "Tomorrow";
+		} else {
+			return moment(timestamp).format("ddd MMMM Do YYYY");
+		}
+	};
+
 	const clearState = () => {
 		dispatch(todo_desc(""));
 		dispatch(todo_steps_clear);
@@ -264,6 +284,8 @@ const AddFeed = () => {
 		dispatch(add_switch_add);
 		dispatch(handle_url(""));
 		dispatch(remove_notif);
+		dispatch(reset_date_completed);
+		dispatch(reset_urgency("No"));
 	};
 
 	const set_all_list = async () => {
@@ -299,6 +321,7 @@ const AddFeed = () => {
 			tag: todo_tag_selected_state.tag,
 			tag_id: todo_tag_selected_state.id,
 			steps: { steps: todo_steps_state },
+			urgent: task_urgency_state,
 			focustime: 0,
 			index: todo_index,
 			remindMe: todo_remind_timestamp_state,
@@ -313,21 +336,15 @@ const AddFeed = () => {
 
 		dispatch(todos(todo));
 		if (todos_state.length === 0) {
-			const todosToday = await todoDB.todos
-				.filter((todo) => {
-					return setTime(todo.dueDate) === "Today";
-				})
-				.toArray();
-
 			const todos_ = await todoDB.todos
 				.filter((todo) => {
-					return setTime(todo.dueDate) !== "Today" && todo.complete === 0;
+					return  todo.complete === 0;
 				})
 				.toArray();
 
 			dispatch(
 				todos(
-					[].concat(todosToday, todos_).sort((todoA, todoB) => {
+					[].concat(todos_).sort((todoA, todoB) => {
 						return todoA.dueDate - todoB.dueDate;
 					})
 				)
@@ -381,6 +398,7 @@ const AddFeed = () => {
 				complete: todo_complete_set_state,
 				important: todo_important_set_state,
 				default: "All",
+				urgent: task_urgency_state,
 			};
 			await todoDB.todos.add(todo);
 
@@ -423,6 +441,8 @@ const AddFeed = () => {
 			complete: todo_complete_set_state,
 			createdAt: new Date(),
 			date_completed: null,
+			tag: todo_tag_selected_state.tag,
+			tag_id: todo_tag_selected_state.id,
 		};
 
 		dispatch(goals(goal));
@@ -473,6 +493,22 @@ const AddFeed = () => {
 		history.goBack();
 	};
 
+	const task_goal_info = (
+		<>
+			{(switch_to_add === "add_" || switch_to_add === "goal_") &&
+			date_completed ? (
+				<div style={{ marginTop: "75px", color: "grey" }}>
+					Date completed: {readableTime(date_completed)}
+				</div>
+			) : null}
+			{(switch_to_add === "add_" || switch_to_add === "goal_") && false ? (
+				<div style={{ color: "grey" }}>
+					Date created: {readableTime(date_completed)}
+				</div>
+			) : null}
+		</>
+	);
+
 	useEffect(() => {
 		setTipNumber(Math.floor(Math.random() * 15));
 
@@ -501,7 +537,10 @@ const AddFeed = () => {
 	}, []);
 
 	return (
-		<div className="container" style={{ marginBottom: "125px" }}>
+		<div
+			className="container"
+			style={{ marginBottom: date_completed ? "60px" : "125px" }}
+		>
 			<div
 				className="container_top_nav"
 				style={{ backgroundColor: darkMode ? mode.dark : mode.light }}
@@ -667,18 +706,22 @@ const AddFeed = () => {
 			{switch_to_add === "add" || switch_to_add === "add_" ? (
 				<span>
 					<TextBar />
+					<Urgent />
 					<Category />
 					<Tag />
 					<DueDate />
 					<Remind />
 					<Repeat />
 					<Notes />
+					{task_goal_info}
 				</span>
 			) : (
 				<span>
 					<TextBar goal={true} />
 					<Summary />
+					<Tag />
 					<Notes goal={true} />
+					{task_goal_info}
 				</span>
 			)}
 		</div>

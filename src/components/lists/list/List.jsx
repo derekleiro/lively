@@ -44,7 +44,7 @@ const List = (props) => {
 
     const todoDB = new Dexie("LivelyTodos");
     todoDB.version(1).stores({
-        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
     });
 
     const handleInput = (e) => {

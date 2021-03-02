@@ -1,3 +1,11 @@
+export const collapse_urgent = {
+    type: "ADD_URGENT_COLLAPSE",
+}
+
+export const collapse_urgent_reset = {
+    type: "RESET_URGENT_COLLAPSE",
+}
+
 export const collapse_earlier = {
     type: "ADD_EARLIER_COLLAPSE",
 }

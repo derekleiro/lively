@@ -14,6 +14,7 @@ const Summary = () => {
     const darkMode = useSelector((state) => state.dark_mode);
     const todo_desc = useSelector((state) => state.todo_desc);
     const goal_summary_text = useSelector((state) => state.goal_summary);
+	const home_goals = useSelector((state) => state.goals.goals);
     const url = useSelector((state) => state.url);
     const switch_to_add = useSelector((state) => state.addfeed_switch);
 
@@ -27,7 +28,7 @@ const Summary = () => {
 
     const goalDB = new Dexie("LivelyGoals");
     goalDB.version(1).stores({
-        goals: `goal_url,title,desc,steps,notes,focustime,date_completed,goal_url,complete`,
+        goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
     });
 
     const textarea = (c) => {
@@ -52,12 +53,14 @@ const Summary = () => {
             dispatch(goal_summary(text));
 
             if (switch_to_add === "goal_") {
-                const goal = {
-                    desc: text,
-                    goal_url: url,
-                };
-
-                dispatch(goal_edit(goal));
+                if(home_goals.length !== 0){
+                    const goal = {
+                        desc: text,
+                        goal_url: url,
+                    };
+    
+                    dispatch(goal_edit(goal));
+                }
 
                 await goalDB.goals
                     .filter((goal) => {

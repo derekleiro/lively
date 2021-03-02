@@ -1,0 +1,12 @@
+#float_Select {
+	padding: 12.5px 0;
+	height: 30px;
+	width: 100%;
+	position: fixed;
+	bottom: 55px;
+	left: 0;
+	display: flex;
+	z-index: 5;
+	overflow: auto;
+	white-space: nowrap;
+}

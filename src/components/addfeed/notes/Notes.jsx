@@ -22,12 +22,12 @@ const Notes = () => {
 
     const todoDB = new Dexie("LivelyTodos");
     todoDB.version(1).stores({
-        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
     });
 
     const goalDB = new Dexie("LivelyGoals");
     goalDB.version(1).stores({
-        goals: `goal_url,title,desc,steps,notes,focustime,date_completed,goal_url,complete`,
+        goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
     });
 
     const generateURL = () => {

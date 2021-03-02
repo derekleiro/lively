@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import moment from "moment";
+import Dexie from "dexie";
 
 import "./bottom-nav.css";
 
@@ -35,7 +36,6 @@ import {
 	dispatch_completed_goals,
 	textarea_state,
 } from "../../actions/add_feed";
-import Dexie from "dexie";
 
 import {
 	most_focused,
@@ -78,12 +78,12 @@ const BottomNav = (props) => {
 
 	const todoDB = new Dexie("LivelyTodos");
 	todoDB.version(1).stores({
-		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
 	});
 
 	const goalDB = new Dexie("LivelyGoals");
 	goalDB.version(1).stores({
-		goals: `goal_url,title,desc,steps,notes,focustime,date_completed,goal_url,complete`,
+		goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
 	});
 
 	const timerDB = new Dexie("LivelyTime");
@@ -100,6 +100,29 @@ const BottomNav = (props) => {
 	tagDB.version(1).stores({
 		tags: `id,total_focus,today,week,month`,
 	});
+
+	const readableTime = (time) => {
+		const hours = Math.floor(time / 3600);
+		const minutes = Math.floor(time / 60);
+
+		if (minutes === 1) {
+			return `${minutes} mins`;
+		} else if (minutes < 1) {
+			return `N/A`;
+		} else if (minutes < 60 && minutes > 1) {
+			return `${minutes} mins`;
+		} else if (time % 3600 === 0) {
+			if (time > 3600) {
+				return `${hours} h`;
+			} else if (time === 3600) {
+				return `${hours} h`;
+			}
+		} else if (minutes > 60 && minutes < 120) {
+			return `${hours} h ${minutes % 60} mins`;
+		} else {
+			return `${hours} h ${minutes % 60 !== 0 ? ` ${minutes % 60} mins` : ``}`;
+		}
+	};
 
 	const setTime = (timestamp) => {
 		const now = moment();
@@ -141,21 +164,15 @@ const BottomNav = (props) => {
 	const GET = {
 		home: () => {
 			const todos = async () => {
-				const todosToday = await todoDB.todos
-					.filter((todo) => {
-						return setTime(todo.dueDate) === "Today";
-					})
-					.toArray();
-
 				const todos = await todoDB.todos
 					.filter((todo) => {
-						return setTime(todo.dueDate) !== "Today" && todo.complete === 0;
+						return todo.complete === 0;
 					})
 					.toArray();
 
 				dispatch(
 					dispatch_todos(
-						[].concat(todosToday, todos).sort((todoA, todoB) => {
+						[].concat(todos).sort((todoA, todoB) => {
 							return todoA.dueDate - todoB.dueDate;
 						})
 					)
@@ -338,7 +355,7 @@ const BottomNav = (props) => {
 
 				const dispatch_item = (tag) => {
 					chart_data_today.labels.push(
-						tag.name.length > 9 ? `${tag.name.slice(0, 8)}...` : tag.name
+						`${tag.name} : (${readableTime(tag.today.focused)})`
 					);
 					chart_data_today.values.push(tag.today.focused / 60);
 					chart_data_today.ids.push(tag.id);
@@ -346,7 +363,7 @@ const BottomNav = (props) => {
 
 				const dispatch_item_week = (tag) => {
 					chart_data_week.labels.push(
-						tag.name.length > 9 ? `${tag.name.slice(0, 8)}...` : tag.name
+						`${tag.name} : (${readableTime(tag.week.focused)})`
 					);
 					chart_data_week.values.push(tag.week.focused / 60);
 					chart_data_week.ids.push(tag.id);

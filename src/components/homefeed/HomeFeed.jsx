@@ -24,6 +24,7 @@ import loading from "../../assets/icons/loading.gif";
 
 import Card from "./card/Card";
 import Done from "../done/Done";
+import FloatSelect from "../floatingselector/FloatSelect";
 import { add_home_timeout } from "../../actions/timeouts";
 import {
 	collapse_earlier,
@@ -34,6 +35,8 @@ import {
 	collapse_today_reset,
 	collapse_tomorrow,
 	collapse_tomorrow_reset,
+	collapse_urgent,
+	collapse_urgent_reset,
 	collapse_yesterday,
 	collapse_yesterday_reset,
 } from "../../actions/toggles";
@@ -54,6 +57,7 @@ const HomeFeed = () => {
 	const [showModalReview, setShowModalReview] = useState(false);
 	const [declinedReview, setDeclinedReview] = useState(false);
 
+	const collapse_urgent_state = useSelector((state) => state.collapse_urgent);
 	const collapse_earlier_state = useSelector((state) => state.collapse_earlier);
 	const collapse_yesterday_state = useSelector(
 		(state) => state.collapse_yesterday
@@ -66,7 +70,7 @@ const HomeFeed = () => {
 
 	const db = new Dexie("LivelyTodos");
 	db.version(1).stores({
-		todos: `todo_url,desc,dueDate,category,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
 	});
 
 	const style = {
@@ -100,9 +104,18 @@ const HomeFeed = () => {
 		}
 	};
 
+	const todo_urgent = tasks
+		.filter((task) => task.urgent === "Yes" && task.complete === 0)
+		.sort((todoA, todoB) => {
+			return todoA.dueDate - todoB.dueDate;
+		});
+
 	const todo_earlier = tasks
 		.filter(
-			(task) => setTime(task.dueDate) === "Earlier" && task.complete === 0
+			(task) =>
+				setTime(task.dueDate) === "Earlier" &&
+				task.complete === 0 &&
+				task.urgent === "No"
 		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
@@ -110,33 +123,56 @@ const HomeFeed = () => {
 
 	const todo_yesterday = tasks
 		.filter(
-			(task) => setTime(task.dueDate) === "Yesterday" && task.complete === 0
+			(task) =>
+				setTime(task.dueDate) === "Yesterday" &&
+				task.complete === 0 &&
+				task.urgent === "No"
 		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
 		});
 
 	const todo_today = tasks
-		.filter((task) => setTime(task.dueDate) === "Today")
+		.filter(
+			(task) =>
+				setTime(task.dueDate) === "Today" &&
+				task.complete === 0 &&
+				task.urgent === "No"
+		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
 		});
 
 	const todo_tomorrow = tasks
 		.filter(
-			(task) => setTime(task.dueDate) === "Tomorrow" && task.complete === 0
+			(task) =>
+				setTime(task.dueDate) === "Tomorrow" &&
+				task.complete === 0 &&
+				task.urgent === "No"
 		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
 		});
 
 	const todo_later = tasks
-		.filter((task) => setTime(task.dueDate) === "Later" && task.complete === 0)
+		.filter(
+			(task) =>
+				setTime(task.dueDate) === "Later" &&
+				task.complete === 0 &&
+				task.urgent === "No"
+		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
 		});
 
 	const collapsible = {
+		urgent: () => {
+			if (collapse_urgent_state === 0) {
+				dispatch(collapse_urgent);
+			} else {
+				dispatch(collapse_urgent_reset);
+			}
+		},
 		earlier: () => {
 			if (collapse_earlier_state === 0) {
 				dispatch(collapse_earlier);
@@ -426,7 +462,12 @@ const HomeFeed = () => {
 				</Done>
 			) : null}
 
-			{tasks.length === 0 ? (
+			{todo_urgent.length === 0 &&
+			todo_earlier.length === 0 &&
+			todo_yesterday.length === 0 &&
+			todo_today.length === 0 &&
+			todo_tomorrow.length === 0 &&
+			todo_later.length === 0 ? (
 				<>
 					<div className="title">You're Free!</div>
 					<Done>
@@ -453,6 +494,70 @@ const HomeFeed = () => {
 				</Done>
 			) : (
 				<>
+					{todo_urgent.length !== 0 ? (
+						<div
+							className="title"
+							style={{
+								marginBottom: collapse_urgent_state ? "25px" : "0",
+							}}
+						>
+							Urgent
+							<span
+								style={{ margin: `0 5px`, ...style }}
+								dangerouslySetInnerHTML={{ __html: `&#8226;` }}
+							></span>
+							<span style={style}>{todo_urgent.length}</span>
+							<span>
+								<img
+									src={
+										dark_mode
+											? collapse_urgent_state
+												? toggleDownLight
+												: toggleUpLight
+											: collapse_urgent_state
+											? toggleDown
+											: toggleUp
+									}
+									style={imgStyle}
+									alt={
+										collapse_urgent_state
+											? "Expand section"
+											: "Collapse section"
+									}
+									onClick={collapsible.urgent}
+								/>
+							</span>
+						</div>
+					) : null}
+
+					<Collapsible open={collapse_urgent_state === 0 ? true : false}>
+						{todo_urgent.map((todo, index) => {
+							return (
+								<div key={index}>
+									<Card
+										urgent_state={true}
+										cardDesc={todo.desc}
+										dueDate={todo.dueDate}
+										category={todo.category}
+										date_completed={todo.date_completed}
+										tag={todo.tag}
+										tag_id={todo.tag_id}
+										steps={todo.steps.steps ? todo.steps.steps : []}
+										remindMe={todo.remindMe}
+										notes={todo.notes.notes ? todo.notes.notes : []}
+										focustime={todo.focustime}
+										index={todo.index}
+										URL={todo.todo_url}
+										repeat={todo.repeat}
+										complete={todo.complete}
+										urgent={todo.urgent}
+										important={todo.important}
+									/>
+								</div>
+							);
+						})}
+					</Collapsible>
+
 					{todo_earlier.length !== 0 ? (
 						<div
 							className="title"
@@ -508,6 +613,7 @@ const HomeFeed = () => {
 										URL={todo.todo_url}
 										repeat={todo.repeat}
 										complete={todo.complete}
+										urgent={todo.urgent}
 										important={todo.important}
 									/>
 								</div>
@@ -570,6 +676,7 @@ const HomeFeed = () => {
 										URL={todo.todo_url}
 										repeat={todo.repeat}
 										complete={todo.complete}
+										urgent={todo.urgent}
 										important={todo.important}
 									/>
 								</div>
@@ -632,6 +739,7 @@ const HomeFeed = () => {
 										URL={todo.todo_url}
 										repeat={todo.repeat}
 										complete={todo.complete}
+										urgent={todo.urgent}
 										important={todo.important}
 									/>
 								</div>
@@ -694,6 +802,7 @@ const HomeFeed = () => {
 										URL={todo.todo_url}
 										repeat={todo.repeat}
 										complete={todo.complete}
+										urgent={todo.urgent}
 										important={todo.important}
 									/>
 								</div>
@@ -754,6 +863,7 @@ const HomeFeed = () => {
 										URL={todo.todo_url}
 										repeat={todo.repeat}
 										complete={todo.complete}
+										urgent={todo.urgent}
 										important={todo.important}
 									/>
 								</div>
@@ -762,6 +872,7 @@ const HomeFeed = () => {
 					</Collapsible>
 				</>
 			)}
+			<FloatSelect />
 		</div>
 	);
 };

@@ -23,7 +23,7 @@ const Repeat = () => {
 
     const todoDB = new Dexie("LivelyTodos");
     todoDB.version(1).stores({
-        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
     });
 
     const [selecting, setSelecting] = useState(false);
@@ -34,13 +34,13 @@ const Repeat = () => {
             color: darkMode ? "white" : "black",
             border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
             background: "transparent",
-            height: "30px",
+            height: "auto",
         },
         style2: {
             color: darkMode ? "white" : "black",
             border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
             background: "transparent",
-            height: "180px",
+            height: "auto",
         },
     };
 
@@ -52,7 +52,7 @@ const Repeat = () => {
         }
 
         if (switch_to_add === "add_") {
-            if (back_index === "home" || home_todos.length !== 0) {
+            if (back_index === "home" && home_todos.length !== 0) {
                 dispatch(
                     todo_edit({
                         repeat: selected,

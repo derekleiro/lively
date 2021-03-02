@@ -33,12 +33,12 @@ const Note = (props) => {
 
     const todoDB = new Dexie("LivelyTodos");
     todoDB.version(1).stores({
-        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,index,date_completed,remindMe,notes,todo_url,complete`,
+        todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
     });
 
     const goalDB = new Dexie("LivelyGoals");
     goalDB.version(1).stores({
-        goals: `goal_url,title,desc,steps,notes,focustime,date_completed,goal_url,complete`,
+        goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
     });
 
     const handleInput = (e) => {
@@ -48,7 +48,7 @@ const Note = (props) => {
 
     const edit_notes = async () => {
         if (switch_to_add === "add_") {
-            if (back_index === "home" || home_todos.length !== 0) {
+            if (back_index === "home" && home_todos.length !== 0) {
                 dispatch(
                     todo_edit({
                         notes: {
@@ -163,7 +163,7 @@ const Note = (props) => {
             if (switch_to_add === "add_" || switch_to_add === "goal_") {
                 removeNote(props.id);
                 if (switch_to_add === "add_") {
-                    if (back_index === "home" || home_todos.length !== 0) {
+                    if (back_index === "home" && home_todos.length !== 0) {
                         dispatch(
                             todo_edit({
                                 note_edit: true,
