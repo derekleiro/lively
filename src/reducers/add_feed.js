@@ -277,6 +277,10 @@ export const AddGoalsReducer = (state = { goals: [] }, action) => {
 				goal_to_edit.desc = action.payload.desc;
 			}
 
+			if (action.payload.deadline) {
+				goal_to_edit.deadline = action.payload.deadline;
+			}
+
 			if (action.payload.tag === null || action.payload.tag) {
 				goal_to_edit.tag = action.payload.tag;
 			}
@@ -532,6 +536,15 @@ export const AddFeedTagSelectedReducer = (
 export const AddFeedDueDateReducer = (state = null, action) => {
 	switch (action.type) {
 		case "HANDLE_TODO_DUEDATE":
+			return (state = action.payload);
+		default:
+			return state;
+	}
+};
+
+export const AddFeedDeadlineReducer = (state = null, action) => {
+	switch (action.type) {
+		case "HANDLE_GOAL_DEADLINE":
 			return (state = action.payload);
 		default:
 			return state;

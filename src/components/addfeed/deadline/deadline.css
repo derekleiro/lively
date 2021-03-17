@@ -1,0 +1,24 @@
+.select_date{
+    display: flex;
+}
+
+.time_select{
+    width: 100%;
+    padding: 15px;
+    outline: 0;
+    border: 0;
+    background: transparent;
+    font-family: "Poppins", sans-serif;
+    padding: 25px 25px 25px 42.5px;
+    height: 30px;
+    max-height: 300px;
+    overflow: auto;
+    border-radius: 35px;
+    transition: ease-in-out height 400ms;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.time_select::-webkit-calendar-picker-indicator {
+    display: none;
+}

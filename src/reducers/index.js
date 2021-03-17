@@ -31,6 +31,7 @@ import {
 	TipsReducer,
 	DateCompletedReducer,
 	UrgencyReducer,
+	AddFeedDeadlineReducer,
 } from "./add_feed";
 import {
 	FocusDoneReducer,
@@ -88,8 +89,6 @@ import {
 	DonationReducer,
 	LimitBottomNavReducer,
 } from "./home_feed";
-import { SelectorReducer } from "./float_selector";
-import { ReportReducer, ReportStateReducer } from "./full_report";
 
 const allReducers = combineReducers({
 	bottom_nav: bottom_nav,
@@ -164,9 +163,7 @@ const allReducers = combineReducers({
 	bottom_nav_limit_state: LimitBottomNavReducer,
 	date_completed: DateCompletedReducer,
 	task_urgency_state: UrgencyReducer,
-	float_selector_selected: SelectorReducer,
-	full_report_state: ReportStateReducer,
-	report: ReportReducer
+	goal_deadline: AddFeedDeadlineReducer
 });
 
 export default allReducers;

@@ -13,6 +13,7 @@ import settings_light from "../../assets/icons/settings_light.png";
 import celebrate from "../../assets/icons/done.png";
 import donate_icon from "../../assets/icons/donate.png";
 import rate_icon from "../../assets/icons/rate.png";
+import tip_icon from "../../assets/icons/tip.png";
 
 import toggleDown from "../../assets/icons/expand.png";
 import toggleDownLight from "../../assets/icons/expand_light.png";
@@ -24,7 +25,6 @@ import loading from "../../assets/icons/loading.gif";
 
 import Card from "./card/Card";
 import Done from "../done/Done";
-import FloatSelect from "../floatingselector/FloatSelect";
 import { add_home_timeout } from "../../actions/timeouts";
 import {
 	collapse_earlier,
@@ -57,8 +57,12 @@ const HomeFeed = () => {
 	const [showModalReview, setShowModalReview] = useState(false);
 	const [declinedReview, setDeclinedReview] = useState(false);
 
+	const [showModalGoodWith, setShowModalGoodWith] = useState(false);
+
 	const collapse_urgent_state = useSelector((state) => state.collapse_urgent);
-	const collapse_earlier_state = useSelector((state) => state.collapse_earlier);
+	const collapse_earlier_state = useSelector(
+		(state) => state.collapse_earlier
+	);
 	const collapse_yesterday_state = useSelector(
 		(state) => state.collapse_yesterday
 	);
@@ -115,7 +119,7 @@ const HomeFeed = () => {
 			(task) =>
 				setTime(task.dueDate) === "Earlier" &&
 				task.complete === 0 &&
-				task.urgent === "No"
+				(task.urgent === "No" || !task.urgent)
 		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
@@ -126,7 +130,7 @@ const HomeFeed = () => {
 			(task) =>
 				setTime(task.dueDate) === "Yesterday" &&
 				task.complete === 0 &&
-				task.urgent === "No"
+				(task.urgent === "No" || !task.urgent)
 		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
@@ -137,7 +141,7 @@ const HomeFeed = () => {
 			(task) =>
 				setTime(task.dueDate) === "Today" &&
 				task.complete === 0 &&
-				task.urgent === "No"
+				(task.urgent === "No" || !task.urgent)
 		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
@@ -148,7 +152,7 @@ const HomeFeed = () => {
 			(task) =>
 				setTime(task.dueDate) === "Tomorrow" &&
 				task.complete === 0 &&
-				task.urgent === "No"
+				(task.urgent === "No" || !task.urgent)
 		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
@@ -159,7 +163,7 @@ const HomeFeed = () => {
 			(task) =>
 				setTime(task.dueDate) === "Later" &&
 				task.complete === 0 &&
-				task.urgent === "No"
+				(task.urgent === "No" || !task.urgent)
 		)
 		.sort((todoA, todoB) => {
 			return todoA.dueDate - todoB.dueDate;
@@ -248,7 +252,9 @@ const HomeFeed = () => {
 			const today_timestamp = Date.parse(
 				localStorage.getItem("today_timestamp")
 			);
-			const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
+			const week_timestamp = Date.parse(
+				localStorage.getItem("week_timestamp")
+			);
 			const month_timestamp = Date.parse(
 				localStorage.getItem("month_timestamp")
 			);
@@ -274,21 +280,32 @@ const HomeFeed = () => {
 	}, []);
 
 	useEffect(() => {
+		const good_with_modal_show = JSON.parse(
+			localStorage.getItem("good_with_modal_show")
+		);
+
+		if (good_with_modal_show === null || !good_with_modal_show) {
+			setShowModalGoodWith(true);
+			localStorage.setItem("good_with_modal_show", true);
+		}
+	}, []);
+
+	useEffect(() => {
 		const get_app_opens = JSON.parse(localStorage.getItem("app_starts"));
 		const get_date_installed = Date.parse(
 			localStorage.getItem("date_installed")
 		);
-		const get_donation_modal_shown = JSON.parse(
-			localStorage.getItem("donation_modal_shown")
+		const get_rate_modal_shown = JSON.parse(
+			localStorage.getItem("rate_modal_shown")
 		);
 
 		const date_installed = moment(get_date_installed);
 		const now = moment();
 
-		if (get_app_opens > 30 && now.diff(date_installed, "days") >= 5) {
-			if (!get_donation_modal_shown) {
-				setShowModal(true);
-				localStorage.setItem("donation_modal_shown", true);
+		if (get_app_opens > 20 && now.diff(date_installed, "days") >= 7) {
+			if (!get_rate_modal_shown) {
+				setShowModalReview(true);
+				localStorage.setItem("rate_modal_shown", true);
 			}
 		}
 	}, []);
@@ -305,7 +322,7 @@ const HomeFeed = () => {
 		const date_installed = moment(get_date_installed);
 		const now = moment();
 
-		if (get_app_opens > 20 && now.diff(date_installed, "days") >= 3) {
+		if (get_app_opens > 20 && now.diff(date_installed, "days") >= 7) {
 			if (!get_rate_modal_shown) {
 				setShowModalReview(true);
 				localStorage.setItem("rate_modal_shown", true);
@@ -324,6 +341,70 @@ const HomeFeed = () => {
 				</Link>
 			</div>
 
+			{showModalGoodWith ? (
+				<Done load={true} extra={true}>
+					<div className="done_options">
+						<img
+							style={{
+								width: "100px",
+								height: "100px",
+							}}
+							src={tip_icon}
+							alt={`Great apps to go with Lively`}
+						/>
+						<div className="done_text">
+							Lively goes best with Your Hour and Fabulous .
+							Lively to help you keep track of your time and get
+							tasks and goals done, Fabulous to make that into a
+							habit and Your Hour to limit distractions.
+						</div>
+
+						<div
+							className="action_button"
+							style={{
+								margin: "0 30px",
+								color: "#1395ff",
+							}}
+							onClick={() => {
+								window.open(
+									"https://play.google.com/store/apps/details?id=com.mindefy.phoneaddiction.mobilepe&hl=en&gl=US",
+									"_blank"
+								);
+							}}
+						>
+							Download Your Hour
+						</div>
+						<div
+							className="action_button"
+							style={{
+								margin: "10px 30px",
+								color: "#1395ff",
+							}}
+							onClick={() => {
+								window.open(
+									"https://play.google.com/store/apps/details?id=co.thefabulous.app",
+									"_blank"
+								);
+							}}
+						>
+							Download Fabulous
+						</div>
+						<div
+							className="action_button"
+							style={{
+								margin: "10px 30px",
+								color: "#1395ff",
+							}}
+							onClick={() => {
+								setShowModalGoodWith(false);
+							}}
+						>
+							I'll check them out later
+						</div>
+					</div>
+				</Done>
+			) : null}
+
 			{showModalReview ? (
 				<Done load={true} extra={true}>
 					<div className="done_options">
@@ -337,19 +418,24 @@ const HomeFeed = () => {
 						/>
 						{declinedReview ? (
 							<div className="done_text">
-								If you ever change your mind, you can always leave a review from
-								the settings page or{" "}
-								{isPlatform("android") ? "Google Play" : "the App Store"} 🎉.
-								Now back to focusing on making your dreams a reality 🚀
+								If you ever change your mind, you can always
+								leave a review from the settings page or{" "}
+								{isPlatform("android")
+									? "Google Play"
+									: "the App Store"}{" "}
+								🎉. Now back to focusing on making your dreams a
+								reality 🚀
 							</div>
 						) : (
 							<>
 								<div className="big_text">Thank You!</div>
 								<div className="done_text">
-									I made this app to help procrastinators take back control of
-									their lives. I hope It helped in any way. I hope you can
-									consider leaving a review, it helps make the app better 🦾,
-									and helps others discover the app 🐱‍🏍
+									I made this app to help procrastinators take
+									back control of their lives. I hope It
+									helped in any way. I hope you can consider
+									leaving a review, it helps make the app
+									better 🦾, and helps others discover the app
+									🐱‍🏍
 								</div>
 							</>
 						)}
@@ -407,20 +493,22 @@ const HomeFeed = () => {
 						/>
 						{declined ? (
 							<div className="done_text">
-								If you ever change your mind, you can always donate from the
-								settings page 🎉. Now back to focusing on making your dreams a
-								reality 🚀
+								If you ever change your mind, you can always
+								donate from the settings page 🎉. Now back to
+								focusing on making your dreams a reality 🚀
 							</div>
 						) : (
 							<>
 								<div className="big_text">Thank You!</div>
 								<div className="done_text">
-									I made this app to help procrastinators take back control of
-									their lives. I hope It helped in any way. I hope you can
-									consider chipping in to keep the project going
+									I made this app to help procrastinators take
+									back control of their lives. I hope It
+									helped in any way. I hope you can consider
+									chipping in to keep the project going
 								</div>
 								<div className="done_text">
-									"No one has ever become poor from giving" - Anne Frank
+									"No one has ever become poor from giving" -
+									Anne Frank
 								</div>{" "}
 							</>
 						)}
@@ -498,7 +586,9 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_urgent_state ? "25px" : "0",
+								marginBottom: collapse_urgent_state
+									? "25px"
+									: "0",
 							}}
 						>
 							Urgent
@@ -530,7 +620,9 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible open={collapse_urgent_state === 0 ? true : false}>
+					<Collapsible
+						open={collapse_urgent_state === 0 ? true : false}
+					>
 						{todo_urgent.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -542,9 +634,17 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={todo.steps.steps ? todo.steps.steps : []}
+										steps={
+											todo.steps.steps
+												? todo.steps.steps
+												: []
+										}
 										remindMe={todo.remindMe}
-										notes={todo.notes.notes ? todo.notes.notes : []}
+										notes={
+											todo.notes.notes
+												? todo.notes.notes
+												: []
+										}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -562,7 +662,9 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_earlier_state ? "25px" : "0",
+								marginBottom: collapse_earlier_state
+									? "25px"
+									: "0",
 							}}
 						>
 							Earlier
@@ -594,7 +696,9 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible open={collapse_earlier_state === 0 ? true : false}>
+					<Collapsible
+						open={collapse_earlier_state === 0 ? true : false}
+					>
 						{todo_earlier.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -605,9 +709,17 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={todo.steps.steps ? todo.steps.steps : []}
+										steps={
+											todo.steps.steps
+												? todo.steps.steps
+												: []
+										}
 										remindMe={todo.remindMe}
-										notes={todo.notes.notes ? todo.notes.notes : []}
+										notes={
+											todo.notes.notes
+												? todo.notes.notes
+												: []
+										}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -625,7 +737,9 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_yesterday_state ? "25px" : "0",
+								marginBottom: collapse_yesterday_state
+									? "25px"
+									: "0",
 							}}
 						>
 							Yesterday
@@ -657,7 +771,9 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible open={collapse_yesterday_state === 0 ? true : false}>
+					<Collapsible
+						open={collapse_yesterday_state === 0 ? true : false}
+					>
 						{todo_yesterday.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -668,9 +784,17 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={todo.steps.steps ? todo.steps.steps : []}
+										steps={
+											todo.steps.steps
+												? todo.steps.steps
+												: []
+										}
 										remindMe={todo.remindMe}
-										notes={todo.notes.notes ? todo.notes.notes : []}
+										notes={
+											todo.notes.notes
+												? todo.notes.notes
+												: []
+										}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -688,7 +812,9 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_today_state ? "25px" : "0",
+								marginBottom: collapse_today_state
+									? "25px"
+									: "0",
 							}}
 						>
 							Today
@@ -712,7 +838,9 @@ const HomeFeed = () => {
 									}
 									style={imgStyle}
 									alt={
-										collapse_today_state ? "Expand section" : "Collapse section"
+										collapse_today_state
+											? "Expand section"
+											: "Collapse section"
 									}
 									onClick={collapsible.today}
 								/>
@@ -720,7 +848,9 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible open={collapse_today_state === 0 ? true : false}>
+					<Collapsible
+						open={collapse_today_state === 0 ? true : false}
+					>
 						{todo_today.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -731,9 +861,17 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={todo.steps.steps ? todo.steps.steps : []}
+										steps={
+											todo.steps.steps
+												? todo.steps.steps
+												: []
+										}
 										remindMe={todo.remindMe}
-										notes={todo.notes.notes ? todo.notes.notes : []}
+										notes={
+											todo.notes.notes
+												? todo.notes.notes
+												: []
+										}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -751,7 +889,9 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_tomorrow_state ? "25px" : "0",
+								marginBottom: collapse_tomorrow_state
+									? "25px"
+									: "0",
 							}}
 						>
 							Tomorrow
@@ -783,7 +923,9 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible open={collapse_tomorrow_state === 0 ? true : false}>
+					<Collapsible
+						open={collapse_tomorrow_state === 0 ? true : false}
+					>
 						{todo_tomorrow.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -794,9 +936,17 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={todo.steps.steps ? todo.steps.steps : []}
+										steps={
+											todo.steps.steps
+												? todo.steps.steps
+												: []
+										}
 										remindMe={todo.remindMe}
-										notes={todo.notes.notes ? todo.notes.notes : []}
+										notes={
+											todo.notes.notes
+												? todo.notes.notes
+												: []
+										}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -814,7 +964,9 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_later_state ? "25px" : "0",
+								marginBottom: collapse_later_state
+									? "25px"
+									: "0",
 							}}
 						>
 							Later
@@ -836,7 +988,9 @@ const HomeFeed = () => {
 									}
 									style={imgStyle}
 									alt={
-										collapse_later_state ? "Expand section" : "Collapse section"
+										collapse_later_state
+											? "Expand section"
+											: "Collapse section"
 									}
 									onClick={collapsible.later}
 								/>
@@ -844,7 +998,9 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible open={collapse_later_state === 0 ? true : false}>
+					<Collapsible
+						open={collapse_later_state === 0 ? true : false}
+					>
 						{todo_later.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -855,9 +1011,17 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={todo.steps.steps ? todo.steps.steps : []}
+										steps={
+											todo.steps.steps
+												? todo.steps.steps
+												: []
+										}
 										remindMe={todo.remindMe}
-										notes={todo.notes.notes ? todo.notes.notes : []}
+										notes={
+											todo.notes.notes
+												? todo.notes.notes
+												: []
+										}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -872,7 +1036,6 @@ const HomeFeed = () => {
 					</Collapsible>
 				</>
 			)}
-			<FloatSelect />
 		</div>
 	);
 };

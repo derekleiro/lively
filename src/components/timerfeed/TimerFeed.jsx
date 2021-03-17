@@ -28,7 +28,6 @@ import {
 	toggle_today,
 	toggle_week,
 } from "../../actions/timer_feed";
-import { dispatch_full_report_state } from "../../actions/full_report";
 import Graph from "./graph/Graph";
 
 const TimerFeed = () => {
@@ -119,16 +118,6 @@ const TimerFeed = () => {
 		}
 	};
 
-	const handleReportView = () => {
-		if (toggle_state) {
-			dispatch(dispatch_full_report_state({ timeframe: 1, name: "Week" }));
-		} else {
-			dispatch(dispatch_full_report_state({ timeframe: 0, name: "Today" }));
-		}
-
-		history.replace("/full_report");
-	};
-
 	useEffect(() => {
 		if (focus_timeout === 0) {
 			const timeout = setTimeout(() => {
@@ -189,22 +178,6 @@ const TimerFeed = () => {
 									: "Switch to view this Week's stats"
 							}
 							onClick={toggle}
-						/>
-					</span>
-					<span>
-						<img
-							src={
-								darkMode
-									? toggle_state
-										? toggleUpLight
-										: toggleDownLight
-									: toggle_state
-									? toggleUp
-									: toggleDown
-							}
-							style={style.imgStyle}
-							alt={"See full report"}
-							onClick={handleReportView}
 						/>
 					</span>
 				</div>

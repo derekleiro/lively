@@ -164,7 +164,7 @@ const BottomNav = (props) => {
 	const GET = {
 		home: () => {
 			const todos = async () => {
-				const todos = await todoDB.todos
+				const todos_ = await todoDB.todos
 					.filter((todo) => {
 						return todo.complete === 0;
 					})
@@ -172,7 +172,7 @@ const BottomNav = (props) => {
 
 				dispatch(
 					dispatch_todos(
-						[].concat(todos).sort((todoA, todoB) => {
+						[].concat(todos_).sort((todoA, todoB) => {
 							return todoA.dueDate - todoB.dueDate;
 						})
 					)

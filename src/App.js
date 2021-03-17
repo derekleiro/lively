@@ -69,7 +69,6 @@ import {
 	activate_bnav_limit,
 	reset_bnav_limit,
 } from "./actions/home_feed";
-import FullReport from "./pages/full_report/FullReport";
 
 const sound = new Howl({
 	src: [completed_sound],
@@ -260,6 +259,7 @@ const App = () => {
 				localStorage.setItem("app_starts", 0);
 				localStorage.setItem("donation_modal_shown", false);
 				localStorage.setItem("rate_modal_shown", false);
+				localStorage.setItem("good_with_modal_show", false);
 
 				await LocalNotifications.requestPermission().then(async () => {
 					if (isPlatform("android") || isPlatform("ios")) {
@@ -520,7 +520,6 @@ const App = () => {
 					component={GoalsCompleted}
 				/>
 				<Route path="/timer" exact={true} component={Timer} />
-				<Route path="/full_report" exact={true} component={FullReport} />
 				<Route path="/focus" exact={true} component={Focus} />
 				<Route path="/focus_:id" exact={true} component={Focus} />
 				<Route path="/list_:id" exact={true} component={ListView} />

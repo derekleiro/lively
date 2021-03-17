@@ -14,6 +14,8 @@ import todo_incomplete_light from "../../../assets/icons/todo_incomplete_light.p
 import todo_complete_icon from "../../../assets/icons/todo_complete.png";
 import tag_icon from "../../../assets/icons/tag.png";
 import tag_light from "../../../assets/icons/tag_light.png";
+import remind_icon from "../../../assets/icons/remind.png";
+import remind_light from "../../../assets/icons/remind_light.png";
 import {
 	todo_desc,
 	goal_summary,
@@ -31,6 +33,8 @@ import {
 	goal_index_home,
 	handle_date_completed,
 	todo_tag_selected,
+	goal_deadline,
+	back_index,
 } from "../../../actions/add_feed";
 import { focus_info } from "../../../actions/focus_feed";
 
@@ -238,7 +242,9 @@ const Goal = (props) => {
 		dispatch(handle_url(props.URL));
 		dispatch(handle_date_completed(props.date_completed));
 		dispatch(todo_tag_selected({ tag: props.tag, id: props.tag_id }));
+		dispatch(goal_deadline(props.deadline ? props.deadline : null))
 		if (props.completedView) {
+			dispatch(back_index("g_completed"))
 			dispatch(goal_index_completed);
 		} else {
 			dispatch(goal_index_home);
@@ -311,6 +317,29 @@ const Goal = (props) => {
 						{props.goal_desc}
 					</div>
 				</Link>
+				{props.deadline && props.complete === 0 ? (
+                    <div
+                        className="card-desc"
+                        style={{
+                            color: "#1395ff",
+                            marginTop: "15px",
+                            lineHeight: "1.8em",
+                        }}
+                    >
+                        <img
+                            src={darkMode ? remind_light : remind_icon}
+                            alt="Start focus"
+                            style={{
+                                width: "20px",
+                                height: "20px",
+                                verticalAlign: "middle",
+                                marginRight: "5px",
+                            }}
+                        />
+                        {moment(props.deadline).fromNow()}
+                    </div>
+                ) : null}
+
 				<div
 					className="card-desc"
 					style={{

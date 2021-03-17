@@ -37,6 +37,8 @@ import {
 	handle_tip_state,
 	reset_date_completed,
 	reset_urgency,
+	goal_deadline,
+	back_index,
 } from "../../actions/add_feed";
 
 import { home_timeout_clear } from "../../actions/timeouts";
@@ -67,6 +69,7 @@ import add_session from "../../util/session";
 import repeat from "../../util/repeat";
 import Done from "../done/Done";
 import Urgent from "./urgent/Urgent";
+import Deadline from "./deadline/Deadline";
 
 const AddFeed = () => {
 	const dispatch = useDispatch();
@@ -159,12 +162,13 @@ const AddFeed = () => {
 	const todos_state = useSelector((state) => state.todos.todos);
 	const goal_summary_state = useSelector((state) => state.goal_summary);
 	const todo_index = useSelector((state) => state.todo_index);
-	const back_index = useSelector((state) => state.back_index);
+	const back_index_state = useSelector((state) => state.back_index);
 	const goal_index = useSelector((state) => state.goal_index);
 	const notif_state = useSelector((state) => state.notif_state);
 	const tip_state = useSelector((state) => state.tip_state);
 	const date_completed = useSelector((state) => state.date_completed);
 	const task_urgency_state = useSelector((state) => state.task_urgency_state);
+    const goal_deadline_state = useSelector((state) => state.goal_deadline);
 
 	const [tipNumber, setTipNumber] = useState(2);
 
@@ -286,6 +290,8 @@ const AddFeed = () => {
 		dispatch(remove_notif);
 		dispatch(reset_date_completed);
 		dispatch(reset_urgency("No"));
+		dispatch(goal_deadline(null))
+		dispatch(back_index("/"))
 	};
 
 	const set_all_list = async () => {
@@ -443,6 +449,7 @@ const AddFeed = () => {
 			date_completed: null,
 			tag: todo_tag_selected_state.tag,
 			tag_id: todo_tag_selected_state.id,
+			deadline: goal_deadline_state
 		};
 
 		dispatch(goals(goal));
@@ -470,7 +477,7 @@ const AddFeed = () => {
 				dispatch(add_switch_add);
 			});
 
-		if (back_index === "_list") {
+		if (back_index_state === "_list") {
 			history.goBack();
 		} else {
 			history.replace("/");
@@ -498,7 +505,7 @@ const AddFeed = () => {
 			{(switch_to_add === "add_" || switch_to_add === "goal_") &&
 			date_completed ? (
 				<div style={{ marginTop: "75px", color: "grey" }}>
-					Date completed: {readableTime(date_completed)}
+					Completed: {readableTime(date_completed)}
 				</div>
 			) : null}
 			{(switch_to_add === "add_" || switch_to_add === "goal_") && false ? (
@@ -551,13 +558,13 @@ const AddFeed = () => {
 						alt="Go back"
 						onClick={() => {
 							if (switch_to_add === "add" || switch_to_add === "add_") {
-								if (back_index === "home" || back_index === "/") {
+								if (back_index_state === "home" || back_index_state === "/") {
 									history.replace("/");
 								} else {
 									history.goBack();
 								}
 							} else {
-								if (back_index === "home" && switch_to_add === "goal") {
+								if (back_index_state === "home" && switch_to_add === "goal") {
 									history.replace("/goals");
 								} else {
 									history.goBack();
@@ -719,6 +726,7 @@ const AddFeed = () => {
 				<span>
 					<TextBar goal={true} />
 					<Summary />
+					<Deadline />
 					<Tag />
 					<Notes goal={true} />
 					{task_goal_info}

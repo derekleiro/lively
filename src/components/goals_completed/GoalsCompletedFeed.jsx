@@ -211,6 +211,7 @@ const GoalsCompletedFeed = () => {
                                                             goal={goal}
                                                             tag={goal.tag ? goal.tag : null}
                                                             tag_id={goal.tag_id ? goal.tag_id : null}
+                                                            deadline={goal.deadline}
                                                         />
                                                     </div>
                                                 </CellMeasurer>

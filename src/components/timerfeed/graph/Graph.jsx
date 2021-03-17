@@ -15,6 +15,7 @@ const Graph = (props) => {
 
 	const new_focus = JSON.parse(localStorage.getItem("new_focus"));
 	const new_focus_week = JSON.parse(localStorage.getItem("new_focus_week"));
+	const focus_timeout = useSelector((state) => state.focus_timeout);
 
 	const [show_state, setShowState] = useState(false);
 	const [graph, setData] = useState({ data: { values: [], labels: [] } });
@@ -124,7 +125,7 @@ const Graph = (props) => {
 		return () => {
 			unmounted = true;
 		};
-	}, [toggle_state]);
+	}, [toggle_state, focus_timeout]);
 
 	useEffect(() => {
 		let unmounted = false;
@@ -153,7 +154,7 @@ const Graph = (props) => {
 		return () => {
 			unmounted = true;
 		};
-	}, [toggle_state, new_focus, new_focus_week]);
+	}, [toggle_state, new_focus, new_focus_week, focus_timeout]);
 
 	return (
 		<div className="pie">

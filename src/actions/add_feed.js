@@ -305,6 +305,13 @@ export const todo_due_date = (data) => {
 	};
 };
 
+export const goal_deadline = (data) => {
+	return {
+		type: "HANDLE_GOAL_DEADLINE",
+		payload: data,
+	};
+};
+
 export const todo_remind_timestamp = (data) => {
 	return {
 		type: "HANDLE_TODO_REMIND",

@@ -18,11 +18,17 @@ const GoalsFeed = () => {
 	const dispatch = useDispatch();
 	const darkMode = useSelector((state) => state.dark_mode);
 	const goal_timeout = useSelector((state) => state.goal_timeout);
-	const my_goals = useSelector((state) => state.goals.goals).sort(
-		(goalA, goalB) => {
-			return goalB.createdAt - goalA.createdAt;
-		}
+	const goals_raw = useSelector((state) => state.goals.goals);
+	const goals_normal = goals_raw.filter((goal) => !goal.deadline);
+	const goals_with_deadline = goals_raw.filter(
+		(goal) => goal.deadline !== null && goal.deadline !== undefined
 	);
+	const my_goals = goals_normal.sort((goalA, goalB) => {
+		return goalB.createdAt - goalA.createdAt;
+	});
+	const my_goals_deadline = goals_with_deadline.sort((goalA, goalB) => {
+		return goalA.deadline - goalB.deadline;
+	});
 	const tip_state = useSelector((state) => state.tip_state);
 
 	const completed_goals = useSelector(
@@ -71,13 +77,13 @@ const GoalsFeed = () => {
 			<div className="container_top_nav" style={style.topNav}>
 				<span className="title" style={style.title}>
 					Your Goals{" "}
-					{my_goals.length !== 0 ? (
+					{goals_raw.length !== 0 ? (
 						<span>
 							<span
 								style={{ margin: `0 5px`, ...style }}
 								dangerouslySetInnerHTML={{ __html: `&#8226;` }}
 							></span>
-							<span style={style.style}>{my_goals.length}</span>{" "}
+							<span style={style.style}>{goals_raw.length}</span>{" "}
 						</span>
 					) : null}
 				</span>
@@ -102,7 +108,7 @@ const GoalsFeed = () => {
 
 			<div className="space" style={{ marginTop: "100px" }}></div>
 
-			{my_goals.length === 0 ? (
+			{goals_raw.length === 0 ? (
 				<Done>
 					<div className="done_options">
 						<img src={goal} alt="Add a new goal" />
@@ -126,21 +132,50 @@ const GoalsFeed = () => {
 				</Done>
 			) : (
 				<>
-					{my_goals.map((goal, index) => {
+					{my_goals_deadline.map((goal, index) => {
 						return (
 							<div key={index}>
 								<Goal
 									goal_title={goal.title}
 									goal_desc={goal.desc}
-									notes={goal.notes.notes ? goal.notes.notes : []}
+									notes={
+										goal.notes.notes ? goal.notes.notes : []
+									}
 									focustime={goal.focustime}
-									steps={goal.steps.steps ? goal.steps.steps : []}
+									steps={
+										goal.steps.steps ? goal.steps.steps : []
+									}
 									URL={goal.goal_url}
 									complete={goal.complete}
 									completedView={false}
 									date_completed={goal.date_completed}
 									tag={goal.tag ? goal.tag : null}
 									tag_id={goal.tag_id ? goal.tag_id : null}
+									deadline={goal.deadline}
+								/>
+							</div>
+						);
+					})}
+					{my_goals.map((goal, index) => {
+						return (
+							<div key={index}>
+								<Goal
+									goal_title={goal.title}
+									goal_desc={goal.desc}
+									notes={
+										goal.notes.notes ? goal.notes.notes : []
+									}
+									focustime={goal.focustime}
+									steps={
+										goal.steps.steps ? goal.steps.steps : []
+									}
+									URL={goal.goal_url}
+									complete={goal.complete}
+									completedView={false}
+									date_completed={goal.date_completed}
+									tag={goal.tag ? goal.tag : null}
+									tag_id={goal.tag_id ? goal.tag_id : null}
+									deadline={goal.deadline}
 								/>
 							</div>
 						);

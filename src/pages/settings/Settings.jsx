@@ -320,7 +320,7 @@ const Settings = () => {
 						</a>{" "}
 						and{" "}
 						<a
-							href="ttps://play.google.com/store/apps/details?id=co.thefabulous.app"
+							href="https://play.google.com/store/apps/details?id=co.thefabulous.app"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
@@ -507,7 +507,7 @@ const Settings = () => {
 							color: "grey",
 						}}
 					>
-						Lively v1.12 build #12
+						Lively v2.00 build #1
 					</div>
 				</div>
 			</div>
