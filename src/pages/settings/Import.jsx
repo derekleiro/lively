@@ -16,10 +16,15 @@ import tip_icon from "../../assets/icons/tip.png";
 import { mode } from "../../constants/color";
 import Done from "../../components/done/Done";
 import { navStateGoals } from "../../actions/bottom_nav";
-import { clear_list } from "../../actions/list_feed";
+import { refresh_list_state } from "../../actions/list_feed";
 import { goals_clear, todos_clear } from "../../actions/add_feed";
 import { reset_timer_feed } from "../../actions/timer_feed";
-import { goal_timeout_clear, home_timeout_clear, list_timeout_clear, reset_focus_timeout } from "../../actions/timeouts";
+import {
+	goal_timeout_clear,
+	home_timeout_clear,
+	list_timeout_clear,
+	reset_focus_timeout,
+} from "../../actions/timeouts";
 
 const Export = () => {
 	const { Filesystem, App, Toast } = Plugins;
@@ -85,15 +90,15 @@ const Export = () => {
 
 	const handleImport = () => {
 		dispatch(navStateGoals);
-		dispatch(clear_list);
+		dispatch(refresh_list_state);
 		dispatch(todos_clear);
 		dispatch(reset_timer_feed);
 		dispatch(goals_clear);
 
-		dispatch(home_timeout_clear)
-		dispatch(list_timeout_clear)
-		dispatch(goal_timeout_clear)
-		dispatch(reset_focus_timeout)
+		dispatch(home_timeout_clear);
+		dispatch(list_timeout_clear);
+		dispatch(goal_timeout_clear);
+		dispatch(reset_focus_timeout);
 
 		Filesystem.requestPermissions().then(
 			async () => {
