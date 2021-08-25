@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
 import Dexie from "dexie";
 import { Link, useHistory } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import moment from "moment";
 import Collapsible from "react-collapsible";
 import { isPlatform } from "@ionic/react";
+import { Plugins } from "@capacitor/core";
 
 import "./home-feed.css";
 
@@ -20,8 +21,6 @@ import toggleDownLight from "../../assets/icons/expand_light.png";
 
 import toggleUp from "../../assets/icons/collapse.png";
 import toggleUpLight from "../../assets/icons/collapse_light.png";
-
-import loading from "../../assets/icons/loading.gif";
 
 import Card from "./card/Card";
 import Done from "../done/Done";
@@ -40,29 +39,66 @@ import {
 	collapse_yesterday,
 	collapse_yesterday_reset,
 } from "../../actions/toggles";
-import { clear_chart_data } from "../../actions/timer_feed";
-import { show_donation_modal } from "../../actions/home_feed";
+import {
+	reset_battery_opt,
+	set_battery_opt,
+	show_donation_modal,
+} from "../../actions/home_feed";
+import SetName from "../setname/SetName";
+import Loading from "../loading/Loading";
+import ThankYou from "../../pages/thank_you/ThankYou";
+
+const modalReducer = (state, action) => {
+	if (action.type === "SET_SHOW_MODAL") {
+		return { show: true, declined: state.declined };
+	}
+
+	if (action.type === "SET_DECLINED_TRUE") {
+		return { show: state.show, declined: true };
+	}
+
+	return { show: false, declined: state.declined };
+};
+
+const modalReviewReducer = (state, action) => {
+	if (action.type === "SET_SHOW_MODAL_REVIEW") {
+		return { show: true, declined: state.declined };
+	}
+
+	if (action.type === "SET_DECLINED_REVIEW_TRUE") {
+		return { show: state.show, declined: true };
+	}
+
+	return { show: false, declined: state.declined };
+};
 
 const HomeFeed = () => {
+	const { Storage } = Plugins;
 	const dispatch = useDispatch();
 	const history = useHistory();
 
 	const dark_mode = useSelector((state) => state.dark_mode);
+	const thanks_state = useSelector((state) => state.thanks);
 	const tasks = useSelector((state) => state.todos.todos);
 	const home_timeout = useSelector((state) => state.home_timeout);
+	const name_state = useSelector((state) => state.name);
 
-	const [showModal, setShowModal] = useState(false);
-	const [declined, setDeclined] = useState(false);
+	const [modal, dispatchModal] = useReducer(modalReducer, {
+		show: false,
+		declined: false,
+	});
 
-	const [showModalReview, setShowModalReview] = useState(false);
-	const [declinedReview, setDeclinedReview] = useState(false);
+	const [modalReview, dispatchModalReview] = useReducer(modalReviewReducer, {
+		show: false,
+		declined: false,
+	});
 
 	const [showModalGoodWith, setShowModalGoodWith] = useState(false);
 
+	const [showSetNameModal, setShowSetNameModal] = useState(false);
+
 	const collapse_urgent_state = useSelector((state) => state.collapse_urgent);
-	const collapse_earlier_state = useSelector(
-		(state) => state.collapse_earlier
-	);
+	const collapse_earlier_state = useSelector((state) => state.collapse_earlier);
 	const collapse_yesterday_state = useSelector(
 		(state) => state.collapse_yesterday
 	);
@@ -87,6 +123,22 @@ const HomeFeed = () => {
 		height: "20px",
 		marginLeft: "10px",
 		verticalAlign: "middle",
+	};
+
+	const handleBatteryOptimisations = async () => {
+		window.cordova.plugins.DozeOptimize.IsIgnoringBatteryOptimizations(
+			(response) => {
+				console.log("IsIgnoringBatteryOptimizations: " + response);
+				if (response === "false") {
+					dispatch(reset_battery_opt);
+				} else {
+					dispatch(set_battery_opt);
+				}
+			},
+			(error) => {
+				console.error("IsIgnoringBatteryOptimizations Error" + error);
+			}
+		);
 	};
 
 	const setTime = (timestamp) => {
@@ -214,30 +266,21 @@ const HomeFeed = () => {
 		},
 	};
 
-	const setTimeWeek = (timestamp) => {
-		const now = moment();
-		const days_passed = now.diff(timestamp, "days");
-
-		if (days_passed > 7) {
-			return false;
-		} else if (days_passed < 0) {
-			return false;
-		} else if (days_passed >= 0 && days_passed <= 7) {
-			return true;
-		}
+	const addDays = (date, days) => {
+		let result = new Date(date);
+		result.setDate(result.getDate() + days);
+		return result;
 	};
 
-	const setTimeMonth = (timestamp) => {
-		const month = moment().format("MMMM");
-		const year = moment().format("YYYY");
-		const localMonth = moment(timestamp).format("MMMM");
-		const localYear = moment(timestamp).format("YYYY");
+	const handleGoodWithSave = async () => {
+		await Storage.set({
+			key: "good_with_modal_show",
+			value: JSON.stringify(true),
+		});
+	};
 
-		if (month === localMonth && year === localYear) {
-			return true;
-		} else {
-			return false;
-		}
+	const handleFinishNameSet = () => {
+		setShowSetNameModal(false);
 	};
 
 	useEffect(() => {
@@ -248,86 +291,117 @@ const HomeFeed = () => {
 			}, 1500);
 		}
 
-		const check_timestamps = () => {
-			const today_timestamp = Date.parse(
-				localStorage.getItem("today_timestamp")
-			);
-			const week_timestamp = Date.parse(
-				localStorage.getItem("week_timestamp")
-			);
-			const month_timestamp = Date.parse(
-				localStorage.getItem("month_timestamp")
-			);
+		if (isPlatform("android")) {
+			handleBatteryOptimisations();
+		}
+	}, []);
 
-			if (setTime(today_timestamp) !== "Today") {
-				localStorage.setItem("new_focus", false);
-				dispatch(clear_chart_data);
-			}
+	useEffect(() => {
+		const check_name = async () => {
+			const name = await Storage.get({
+				key: "name",
+			});
 
-			if (!setTimeWeek(week_timestamp)) {
-				localStorage.setItem("new_focus_week", false);
-				dispatch(clear_chart_data);
-			}
-
-			if (!setTimeMonth(month_timestamp)) {
-				localStorage.setItem("new_focus", false);
-				localStorage.setItem("new_focus_week", false);
-				dispatch(clear_chart_data);
+			if (!name.value) {
+				setShowSetNameModal(true);
 			}
 		};
 
-		check_timestamps();
+		check_name();
 	}, []);
 
 	useEffect(() => {
-		const good_with_modal_show = JSON.parse(
-			localStorage.getItem("good_with_modal_show")
-		);
+		const check_good_with = async () => {
+			const good_with_modal_shown_raw = await Storage.get({
+				key: "good_with_modal_show",
+			});
+			const good_with_modal_shown = JSON.parse(good_with_modal_shown_raw.value);
 
-		if (good_with_modal_show === null || !good_with_modal_show) {
-			setShowModalGoodWith(true);
-			localStorage.setItem("good_with_modal_show", true);
-		}
-	}, []);
-
-	useEffect(() => {
-		const get_app_opens = JSON.parse(localStorage.getItem("app_starts"));
-		const get_date_installed = Date.parse(
-			localStorage.getItem("date_installed")
-		);
-		const get_rate_modal_shown = JSON.parse(
-			localStorage.getItem("rate_modal_shown")
-		);
-
-		const date_installed = moment(get_date_installed);
-		const now = moment();
-
-		if (get_app_opens > 20 && now.diff(date_installed, "days") >= 7) {
-			if (!get_rate_modal_shown) {
-				setShowModalReview(true);
-				localStorage.setItem("rate_modal_shown", true);
+			if (!good_with_modal_shown) {
+				setShowModalGoodWith(true);
 			}
-		}
+		};
+
+		check_good_with();
 	}, []);
 
 	useEffect(() => {
-		const get_app_opens = JSON.parse(localStorage.getItem("app_starts"));
-		const get_date_installed = Date.parse(
-			localStorage.getItem("date_installed")
-		);
-		const get_rate_modal_shown = JSON.parse(
-			localStorage.getItem("rate_modal_shown")
-		);
+		const displayRateModal = async () => {
+			const get_app_opens_raw = await Storage.get({ key: "app_starts" });
+			const get_app_opens = JSON.parse(get_app_opens_raw.value);
 
-		const date_installed = moment(get_date_installed);
-		const now = moment();
+			const get_date_installed_raw = await Storage.get({
+				key: "date_installed",
+			});
+			const get_date_installed_JSON = JSON.parse(get_date_installed_raw.value);
 
-		if (get_app_opens > 20 && now.diff(date_installed, "days") >= 7) {
-			if (!get_rate_modal_shown) {
-				setShowModalReview(true);
-				localStorage.setItem("rate_modal_shown", true);
+			const get_date_installed = Date.parse(get_date_installed_JSON);
+
+			const get_rate_modal_shown_raw = await Storage.get({
+				key: "rate_modal_shown",
+			});
+			const get_rate_modal_shown = JSON.parse(get_rate_modal_shown_raw.value);
+
+			const date_installed = moment(get_date_installed).toDate();
+			const now = moment();
+
+			if (
+				get_app_opens > 20 &&
+				now.diff(date_installed, "days") >= 3 &&
+				!get_rate_modal_shown
+			) {
+				dispatchModalReview({ type: "SET_SHOW_MODAL_REVIEW" });
+				await Storage.set({
+					key: "rate_modal_shown",
+					value: JSON.stringify(true),
+				});
 			}
-		}
+		};
+
+		displayRateModal();
+	}, []);
+
+	useEffect(() => {
+		const displayDonateModal = async () => {
+			const get_next_donation_date_raw = await Storage.get({
+				key: "next_donation_reminder_date",
+			});
+			const get_donation_modal_shown_raw = await Storage.get({
+				key: "donation_modal_shown",
+			});
+
+			const get_next_donation_dateJSON = JSON.parse(
+				get_next_donation_date_raw.value
+			);
+			const get_next_donation_date = Date.parse(get_next_donation_dateJSON);
+
+			const get_donation_modal_shown = JSON.parse(
+				get_donation_modal_shown_raw.value
+			);
+
+			const get_app_opens_raw = await Storage.get({ key: "app_starts" });
+			const get_app_opens = JSON.parse(get_app_opens_raw.value);
+
+			const next_date = moment(get_next_donation_date).toDate();
+			const now = moment();
+
+			if (get_next_donation_date_raw.value) {
+				if (
+					now.diff(next_date, "days") >= 0 &&
+					!get_donation_modal_shown &&
+					get_app_opens > 20
+				) {
+					dispatchModal({ type: "SET_SHOW_MODAL" });
+				}
+			} else {
+				await Storage.set({
+					key: "next_donation_reminder_date",
+					value: JSON.stringify(addDays(new Date(), 3)),
+				});
+			}
+		};
+
+		displayDonateModal();
 	}, []);
 
 	return (
@@ -341,8 +415,14 @@ const HomeFeed = () => {
 				</Link>
 			</div>
 
+			{thanks_state && <ThankYou />}
+
+			{showSetNameModal ? (
+				<SetName handleFinishNameSet={handleFinishNameSet} />
+			) : null}
+
 			{showModalGoodWith ? (
-				<Done load={true} extra={true}>
+				<Done load={true} extra={true} priority={1}>
 					<div className="done_options">
 						<img
 							style={{
@@ -352,11 +432,15 @@ const HomeFeed = () => {
 							src={tip_icon}
 							alt={`Great apps to go with Lively`}
 						/>
+						<div className="big_text">Welcome {name_state}!</div>
 						<div className="done_text">
-							Lively goes best with Your Hour and Fabulous .
-							Lively to help you keep track of your time and get
-							tasks and goals done, Fabulous to make that into a
-							habit and Your Hour to limit distractions.
+							To aid with eliminating procrastination, I recommend Your Hour and
+							Fabulous.
+						</div>
+						<div className="done_text">
+							Lively will help you keep track of your time, get tasks and goals
+							done. Fabulous to form that into a habit and Your Hour to limit
+							distractions.
 						</div>
 
 						<div
@@ -365,14 +449,15 @@ const HomeFeed = () => {
 								margin: "0 30px",
 								color: "#1395ff",
 							}}
-							onClick={() => {
+							onClick={async () => {
 								window.open(
 									"https://play.google.com/store/apps/details?id=com.mindefy.phoneaddiction.mobilepe&hl=en&gl=US",
 									"_blank"
 								);
+								handleGoodWithSave();
 							}}
 						>
-							Download Your Hour
+							Your Hour
 						</div>
 						<div
 							className="action_button"
@@ -385,9 +470,10 @@ const HomeFeed = () => {
 									"https://play.google.com/store/apps/details?id=co.thefabulous.app",
 									"_blank"
 								);
+								handleGoodWithSave();
 							}}
 						>
-							Download Fabulous
+							Fabulous
 						</div>
 						<div
 							className="action_button"
@@ -397,15 +483,16 @@ const HomeFeed = () => {
 							}}
 							onClick={() => {
 								setShowModalGoodWith(false);
+								handleGoodWithSave();
 							}}
 						>
-							I'll check them out later
+							I will download them later
 						</div>
 					</div>
 				</Done>
 			) : null}
 
-			{showModalReview ? (
+			{modalReview.show ? (
 				<Done load={true} extra={true}>
 					<div className="done_options">
 						<img
@@ -416,31 +503,22 @@ const HomeFeed = () => {
 							src={rate_icon}
 							alt={`Help out to keep the project going`}
 						/>
-						{declinedReview ? (
+						{modalReview.show ? (
 							<div className="done_text">
-								If you ever change your mind, you can always
-								leave a review from the settings page or{" "}
-								{isPlatform("android")
-									? "Google Play"
-									: "the App Store"}{" "}
-								🎉. Now back to focusing on making your dreams a
-								reality 🚀
+								If you ever change your mind, you can always leave a review on{" "}
+								{isPlatform("android") ? "Google Play" : "the App Store"} 🎉.
 							</div>
 						) : (
 							<>
-								<div className="big_text">Thank You!</div>
+								<div className="big_text">Hey {name_state}!</div>
 								<div className="done_text">
-									I made this app to help procrastinators take
-									back control of their lives. I hope It
-									helped in any way. I hope you can consider
-									leaving a review, it helps make the app
-									better 🦾, and helps others discover the app
-									🐱‍🏍
+									I hope this app has helped you in any way. Help us get this
+									app to a bigger audience by leaving a review.
 								</div>
 							</>
 						)}
 
-						{declinedReview ? null : (
+						{modalReview.declined ? null : (
 							<span
 								className="action_button"
 								style={{
@@ -453,7 +531,7 @@ const HomeFeed = () => {
 										"https://play.google.com/store/apps/details?id=com.lively.life",
 										"_blank"
 									);
-									setShowModalReview(false);
+									dispatchModalReview({ type: "REMOVE_MODAL_REVIEW" });
 								}}
 							>
 								Leave a review
@@ -467,20 +545,20 @@ const HomeFeed = () => {
 								color: "#1395ff",
 							}}
 							onClick={() => {
-								if (declinedReview) {
-									setShowModalReview(false);
+								if (modalReview.declined) {
+									dispatchModalReview({ type: "REMOVE_MODAL_REVIEW" });
 								} else {
-									setDeclinedReview(true);
+									dispatchModalReview({ type: "SET_DECLINED_REVIEW_TRUE" });
 								}
 							}}
 						>
-							{declinedReview ? "Nice" : "Maybe later"}
+							{modalReview.declined ? "Nice" : "Maybe later"}
 						</span>
 					</div>
 				</Done>
 			) : null}
 
-			{showModal ? (
+			{modal.show ? (
 				<Done load={true} extra={true}>
 					<div className="done_options">
 						<img
@@ -491,38 +569,37 @@ const HomeFeed = () => {
 							src={donate_icon}
 							alt={`Help out to keep the project going`}
 						/>
-						{declined ? (
+						{modal.declined ? (
 							<div className="done_text">
-								If you ever change your mind, you can always
-								donate from the settings page 🎉. Now back to
-								focusing on making your dreams a reality 🚀
+								If you ever change your mind, you can always support at any
+								time.
 							</div>
 						) : (
 							<>
-								<div className="big_text">Thank You!</div>
+								<div className="big_text">Hey {name_state},</div>
 								<div className="done_text">
-									I made this app to help procrastinators take
-									back control of their lives. I hope It
-									helped in any way. I hope you can consider
-									chipping in to keep the project going
+									For the price of a cup of coffee, you can keep this project
+									going. Lively is and will always be ad-free and give you all
+									features without a subscription. Lively will always depend on
+									your generosity as with our motto "generosity for generosity".
 								</div>
-								<div className="done_text">
-									"No one has ever become poor from giving" -
-									Anne Frank
-								</div>{" "}
 							</>
 						)}
 
-						{declined ? null : (
+						{modal.declined ? null : (
 							<span
 								className="action_button"
 								style={{
 									margin: "0 30px",
 									color: "#1395ff",
 								}}
-								onClick={() => {
+								onClick={async () => {
 									dispatch(show_donation_modal);
-									setShowModal(false);
+									dispatchModal({ type: "REMOVE_MODAL" });
+									await Storage.set({
+										key: "next_donation_reminder_date",
+										value: JSON.stringify(addDays(new Date(), 3)),
+									});
 									history.replace("/settings#donate_section");
 								}}
 							>
@@ -536,15 +613,19 @@ const HomeFeed = () => {
 								margin: "0 30px",
 								color: "#1395ff",
 							}}
-							onClick={() => {
-								if (declined) {
-									setShowModal(false);
+							onClick={async () => {
+								if (modal.declined) {
+									dispatchModal({ type: "REMOVE_MODAL" });
 								} else {
-									setDeclined(true);
+									await Storage.set({
+										key: "next_donation_reminder_date",
+										value: JSON.stringify(addDays(new Date(), 3)),
+									});
+									dispatchModal({ type: "SET_DECLINED_TRUE" });
 								}
 							}}
 						>
-							{declined ? "Nice" : "Maybe later"}
+							{modal.declined ? "Nice" : "Later, I promise"}
 						</span>
 					</div>
 				</Done>
@@ -571,24 +652,14 @@ const HomeFeed = () => {
 			) : null}
 
 			{home_timeout === 0 ? (
-				<Done load={true}>
-					<div className="done_options">
-						<img
-							style={{ width: "35px", height: "35px" }}
-							src={loading}
-							alt="Loading your tasks"
-						/>
-					</div>
-				</Done>
+				<Loading />
 			) : (
 				<>
 					{todo_urgent.length !== 0 ? (
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_urgent_state
-									? "25px"
-									: "0",
+								marginBottom: collapse_urgent_state ? "25px" : "0",
 							}}
 						>
 							Urgent
@@ -620,9 +691,7 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible
-						open={collapse_urgent_state === 0 ? true : false}
-					>
+					<Collapsible open={collapse_urgent_state === 0 ? true : false}>
 						{todo_urgent.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -634,17 +703,9 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={
-											todo.steps.steps
-												? todo.steps.steps
-												: []
-										}
+										steps={todo.steps.steps ? todo.steps.steps : []}
 										remindMe={todo.remindMe}
-										notes={
-											todo.notes.notes
-												? todo.notes.notes
-												: []
-										}
+										notes={todo.notes.notes ? todo.notes.notes : []}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -662,9 +723,7 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_earlier_state
-									? "25px"
-									: "0",
+								marginBottom: collapse_earlier_state ? "25px" : "0",
 							}}
 						>
 							Earlier
@@ -696,9 +755,7 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible
-						open={collapse_earlier_state === 0 ? true : false}
-					>
+					<Collapsible open={collapse_earlier_state === 0 ? true : false}>
 						{todo_earlier.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -709,17 +766,9 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={
-											todo.steps.steps
-												? todo.steps.steps
-												: []
-										}
+										steps={todo.steps.steps ? todo.steps.steps : []}
 										remindMe={todo.remindMe}
-										notes={
-											todo.notes.notes
-												? todo.notes.notes
-												: []
-										}
+										notes={todo.notes.notes ? todo.notes.notes : []}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -737,9 +786,7 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_yesterday_state
-									? "25px"
-									: "0",
+								marginBottom: collapse_yesterday_state ? "25px" : "0",
 							}}
 						>
 							Yesterday
@@ -771,9 +818,7 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible
-						open={collapse_yesterday_state === 0 ? true : false}
-					>
+					<Collapsible open={collapse_yesterday_state === 0 ? true : false}>
 						{todo_yesterday.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -784,17 +829,9 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={
-											todo.steps.steps
-												? todo.steps.steps
-												: []
-										}
+										steps={todo.steps.steps ? todo.steps.steps : []}
 										remindMe={todo.remindMe}
-										notes={
-											todo.notes.notes
-												? todo.notes.notes
-												: []
-										}
+										notes={todo.notes.notes ? todo.notes.notes : []}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -812,9 +849,7 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_today_state
-									? "25px"
-									: "0",
+								marginBottom: collapse_today_state ? "25px" : "0",
 							}}
 						>
 							Today
@@ -838,9 +873,7 @@ const HomeFeed = () => {
 									}
 									style={imgStyle}
 									alt={
-										collapse_today_state
-											? "Expand section"
-											: "Collapse section"
+										collapse_today_state ? "Expand section" : "Collapse section"
 									}
 									onClick={collapsible.today}
 								/>
@@ -848,9 +881,7 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible
-						open={collapse_today_state === 0 ? true : false}
-					>
+					<Collapsible open={collapse_today_state === 0 ? true : false}>
 						{todo_today.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -861,17 +892,9 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={
-											todo.steps.steps
-												? todo.steps.steps
-												: []
-										}
+										steps={todo.steps.steps ? todo.steps.steps : []}
 										remindMe={todo.remindMe}
-										notes={
-											todo.notes.notes
-												? todo.notes.notes
-												: []
-										}
+										notes={todo.notes.notes ? todo.notes.notes : []}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -889,9 +912,7 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_tomorrow_state
-									? "25px"
-									: "0",
+								marginBottom: collapse_tomorrow_state ? "25px" : "0",
 							}}
 						>
 							Tomorrow
@@ -923,9 +944,7 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible
-						open={collapse_tomorrow_state === 0 ? true : false}
-					>
+					<Collapsible open={collapse_tomorrow_state === 0 ? true : false}>
 						{todo_tomorrow.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -936,17 +955,9 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={
-											todo.steps.steps
-												? todo.steps.steps
-												: []
-										}
+										steps={todo.steps.steps ? todo.steps.steps : []}
 										remindMe={todo.remindMe}
-										notes={
-											todo.notes.notes
-												? todo.notes.notes
-												: []
-										}
+										notes={todo.notes.notes ? todo.notes.notes : []}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}
@@ -964,9 +975,7 @@ const HomeFeed = () => {
 						<div
 							className="title"
 							style={{
-								marginBottom: collapse_later_state
-									? "25px"
-									: "0",
+								marginBottom: collapse_later_state ? "25px" : "0",
 							}}
 						>
 							Later
@@ -988,9 +997,7 @@ const HomeFeed = () => {
 									}
 									style={imgStyle}
 									alt={
-										collapse_later_state
-											? "Expand section"
-											: "Collapse section"
+										collapse_later_state ? "Expand section" : "Collapse section"
 									}
 									onClick={collapsible.later}
 								/>
@@ -998,9 +1005,7 @@ const HomeFeed = () => {
 						</div>
 					) : null}
 
-					<Collapsible
-						open={collapse_later_state === 0 ? true : false}
-					>
+					<Collapsible open={collapse_later_state === 0 ? true : false}>
 						{todo_later.map((todo, index) => {
 							return (
 								<div key={index}>
@@ -1011,17 +1016,9 @@ const HomeFeed = () => {
 										date_completed={todo.date_completed}
 										tag={todo.tag}
 										tag_id={todo.tag_id}
-										steps={
-											todo.steps.steps
-												? todo.steps.steps
-												: []
-										}
+										steps={todo.steps.steps ? todo.steps.steps : []}
 										remindMe={todo.remindMe}
-										notes={
-											todo.notes.notes
-												? todo.notes.notes
-												: []
-										}
+										notes={todo.notes.notes ? todo.notes.notes : []}
 										focustime={todo.focustime}
 										index={todo.index}
 										URL={todo.todo_url}

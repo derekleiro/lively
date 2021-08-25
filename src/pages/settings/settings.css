@@ -1,6 +1,10 @@
 .element{
     display: flex;
     margin: 25px 0;
+    background: rgb(15, 15, 15);
+	border-radius: 35px;
+	padding: 10px 20px;
+    align-items: center;
 }
 
 .text{

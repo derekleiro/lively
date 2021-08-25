@@ -26,10 +26,8 @@ import { refresh_list_state } from "../../actions/list_feed";
 import { list_timeout_clear } from "../../actions/timeouts";
 import tag_ from "../../util/tag";
 import { navStateHome } from "../../actions/bottom_nav";
-import {
-	add_chart_data_tag,
-	delete_chart_data_tag,
-} from "../../actions/timer_feed";
+import { reset_timer_feed } from "../../actions/timer_feed";
+import { focus_info } from "../../actions/focus_feed";
 
 const Tag = (props) => {
 	const dispatch = useDispatch();
@@ -46,10 +44,10 @@ const Tag = (props) => {
 	const todo_tag_selected_value = useSelector((state) =>
 		state.todo_tag_selected ? state.todo_tag_selected.tag : null
 	);
+	const focus_info_state = useSelector((state) => state.focus_info);
 	const switch_to_add = useSelector((state) => state.addfeed_switch);
 	const todos_ = useSelector((state) => state.todos.todos);
 	const goals_ = useSelector((state) => state.goals.goals);
-	const chartData = useSelector((state) => state.chart_data);
 	const [selecting, setSelecting] = useState(false);
 	const [text, setText] = useState("");
 	const [empty, setEmpty] = useState(false);
@@ -58,10 +56,6 @@ const Tag = (props) => {
 	);
 
 	const [data, setData] = useState(todo_tag_option_value);
-
-	const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
-	const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
-	const month_timestamp = Date.parse(localStorage.getItem("month_timestamp"));
 
 	const db = new Dexie("LivelyTags");
 	db.version(1).stores({
@@ -78,12 +72,24 @@ const Tag = (props) => {
 		goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
 	});
 
+	const logDB = new Dexie("LivelyLogs");
+	logDB.version(1).stores({
+		logs: "date, tasks, goals, total, todos_count, graph, goals_count",
+	});
+
 	const style = {
 		style1: {
 			color: darkMode ? "white" : "black",
 			border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
 			background: "transparent",
 			height: "30px",
+			maxHeight: "300px",
+			width: "auto",
+			outline: "0",
+			fontFamily: `"Poppins", sans-serif`,
+			padding: "7.5px 40px 7.5px 15px",
+			overflow: "auto",
+			borderRadius: "35px",
 		},
 		style2: {
 			color: darkMode ? "white" : "black",
@@ -91,6 +97,12 @@ const Tag = (props) => {
 			background: "transparent",
 			height: "auto",
 			maxHeight: "250px",
+			width: "auto",
+			outline: "0",
+			fontFamily: `"Poppins", sans-serif`,
+			padding: "7.5px 40px 7.5px 15px",
+			overflow: "auto",
+			borderRadius: "35px",
 		},
 	};
 
@@ -151,6 +163,16 @@ const Tag = (props) => {
 			setEmpty(false);
 			dispatch(todo_tag_selected({ tag: value, id }));
 
+			if (props.focus) {
+				dispatch(
+					focus_info({
+						...focus_info_state,
+						tag: value,
+						tag_id: id,
+					})
+				);
+			}
+
 			if (switch_to_add === "add_") {
 				if (back_index === "home" && home_todos.length !== 0) {
 					dispatch(todo_edit({ tag: value, tag_id: id, todo_url: url }));
@@ -191,39 +213,15 @@ const Tag = (props) => {
 				id,
 				name: text,
 				total_focus: 0,
-				today: {
-					focused: 0,
-				},
-				week: {
-					focused: 0,
-				},
-				month: {
-					focused: 0,
-				},
 			};
 
 			setData([data_, ...data]);
 
-			const time = {
-				today: today_timestamp,
-				week: week_timestamp,
-				month: month_timestamp,
-			};
-
-			tag_(data_, time);
+			tag_(data_);
 			dispatch(todo_tag_option(data_));
 
 			handleSelect({ value: text, id });
-
-			if (chartData.today !== null || chartData.week !== null) {
-				dispatch(
-					add_chart_data_tag({
-						label: text,
-						value: 0,
-						id,
-					})
-				);
-			}
+			dispatch(reset_timer_feed);
 
 			setText("");
 		} else {
@@ -234,16 +232,17 @@ const Tag = (props) => {
 
 	const handleDelete = async (metadata) => {
 		const { id, name } = metadata;
-		setData(data.filter((tag) => tag.id !== id));
+		setData((current) => current.filter((tag) => tag.id !== id));
+		await logDB.logs.toCollection().modify((log) => {
+			log.graph = log.graph.filter((tag) => tag.id !== id);
+		});
 		await db.tags.filter((tag) => tag.id === id).delete();
 		await todoDB.todos.filter((todo) => todo.tag === name).delete();
 		await goalDB.goals
 			.filter((goal) => goal.tag === name)
 			.modify({ tag: null, tag_id: null });
 
-		if (chartData.today !== null || chartData.week !== null) {
-			dispatch(delete_chart_data_tag(id));
-		}
+		dispatch(reset_timer_feed);
 
 		if (todos_.length !== 0) {
 			const has = todos_.filter((todo) => todo.tag === name);
@@ -290,10 +289,12 @@ const Tag = (props) => {
 	return (
 		<div className="category" style={{ marginTop: "25px" }}>
 			<div style={{ marginBottom: "15px", marginLeft: "5px" }}>
-				{props.focus ? "What are you focusing on?" : "Add a tag"}
+				{!props.focus && !props.log && "Add a tag"}
+				{props.focus && !props.log && "What are you focusing on?"}
+				{props.log && "I was focusing on: "}
 			</div>
 			{selecting ? (
-				<div className="category_select" style={style.style2}>
+				<div style={style.style2}>
 					<Option
 						selected={selected}
 						value="Create a new tag +"

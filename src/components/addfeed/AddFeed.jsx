@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Dexie from "dexie";
 import { useSelector, useDispatch } from "react-redux";
-import { Link, useHistory } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import moment from "moment";
+import { Plugins } from "@capacitor/core";
 
 import "./add-feed.css";
 
@@ -39,13 +40,15 @@ import {
 	reset_urgency,
 	goal_deadline,
 	back_index,
+	add_task_list,
 } from "../../actions/add_feed";
 
-import { home_timeout_clear } from "../../actions/timeouts";
+import { home_timeout_clear, list_timeout_clear } from "../../actions/timeouts";
 
 import back_icon from "../../assets/icons/back.png";
 import back_icon_light from "../../assets/icons/back_light.png";
 import tip_icon from "../../assets/icons/tip.png";
+import delete_icon from "../../assets/icons/delete_item.png";
 
 import TextBar from "./textbar/Textbar";
 import Category from "./category/Category";
@@ -60,18 +63,19 @@ import {
 	schedule_notification,
 } from "../../util/notifications";
 import { refresh_list_state } from "../../actions/list_feed";
-import { list_timeout_clear } from "../../actions/timeouts";
 import Tag from "../tag/Tag";
 import { navStateLists } from "../../actions/bottom_nav";
-import { clear_chart_data } from "../../actions/timer_feed";
-import { session_add } from "../../util/session_add";
-import add_session from "../../util/session";
+import { reset_timer_feed } from "../../actions/timer_feed";
+import { stats_add } from "../../util/stats_add";
+import add_month from "../../util/add_month";
 import repeat from "../../util/repeat";
 import Done from "../done/Done";
 import Urgent from "./urgent/Urgent";
 import Deadline from "./deadline/Deadline";
 
 const AddFeed = () => {
+	const { Storage, App } = Plugins;
+
 	const dispatch = useDispatch();
 	const history = useHistory();
 	const darkMode = useSelector((state) => state.dark_mode);
@@ -168,12 +172,11 @@ const AddFeed = () => {
 	const tip_state = useSelector((state) => state.tip_state);
 	const date_completed = useSelector((state) => state.date_completed);
 	const task_urgency_state = useSelector((state) => state.task_urgency_state);
-    const goal_deadline_state = useSelector((state) => state.goal_deadline);
+	const goal_deadline_state = useSelector((state) => state.goal_deadline);
+	const add_task_list_state = useSelector((state) => state.add_task_list);
 
 	const [tipNumber, setTipNumber] = useState(2);
-
-	const month = moment(new Date()).format("MMMM");
-	const year = moment(new Date()).format("yyyy");
+	const [aboutToDelete, setAboutToDelete] = useState(false);
 
 	const uid = window.location.href.substring(
 		window.location.href.lastIndexOf("/") + 1
@@ -227,6 +230,22 @@ const AddFeed = () => {
 		lists: `list_id,name,todo,completed,list_id,index`,
 	});
 
+	const handleBack = () => {
+		if (switch_to_add === "add" || switch_to_add === "add_") {
+			if (back_index_state === "home") {
+				history.replace("/");
+			} else {
+				history.goBack();
+			}
+		} else {
+			if (back_index_state === "home" && switch_to_add === "goal") {
+				history.replace("/goals");
+			} else {
+				history.goBack();
+			}
+		}
+	};
+
 	const generateURL = (switch_to_add) => {
 		const uuid = uuidv4();
 		let url;
@@ -237,25 +256,6 @@ const AddFeed = () => {
 		}
 
 		return url;
-	};
-
-	const setTime = (timestamp) => {
-		const now = moment();
-
-		if (
-			now.diff(timestamp, "days") >= 1 &&
-			!moment(timestamp).calendar().includes("Yesterday")
-		) {
-			return "Earlier";
-		} else if (moment(timestamp).calendar().includes("Yesterday")) {
-			return "Yesterday";
-		} else if (moment(timestamp).calendar().includes("Today")) {
-			return "Today";
-		} else if (moment(timestamp).calendar().includes("Tomorrow")) {
-			return "Tomorrow";
-		} else {
-			return "Later";
-		}
 	};
 
 	const readableTime = (timestamp) => {
@@ -290,8 +290,9 @@ const AddFeed = () => {
 		dispatch(remove_notif);
 		dispatch(reset_date_completed);
 		dispatch(reset_urgency("No"));
-		dispatch(goal_deadline(null))
-		dispatch(back_index("/"))
+		dispatch(goal_deadline(null));
+		dispatch(back_index("home"));
+		dispatch(add_task_list(false));
 	};
 
 	const set_all_list = async () => {
@@ -317,7 +318,8 @@ const AddFeed = () => {
 	const add_todo = async () => {
 		const url = generateURL(switch_to_add);
 
-		const index = JSON.parse(localStorage.getItem("todo_index"));
+		const index_raw = await Storage.get({ key: "todo_index" });
+		const index = JSON.parse(index_raw.value);
 		const todo_index = index + 1;
 
 		const todo = {
@@ -344,7 +346,7 @@ const AddFeed = () => {
 		if (todos_state.length === 0) {
 			const todos_ = await todoDB.todos
 				.filter((todo) => {
-					return  todo.complete === 0;
+					return todo.complete === 0;
 				})
 				.toArray();
 
@@ -374,39 +376,13 @@ const AddFeed = () => {
 			);
 		}
 
-		localStorage.setItem("todo_index", todo_index);
+		await Storage.set({
+			key: "todo_index",
+			value: JSON.stringify(todo_index),
+		});
 
 		if (todo_complete_set_state) {
-			const data_1 = {
-				month,
-				year,
-				createdAt: new Date(),
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-				completedGoals: 0,
-				completedTasks: 1,
-			};
-			const todo = {
-				desc: todo_desc_state,
-				dueDate: todo_due_date_state,
-				category: todo_list_selected_state,
-				date_completed: new Date(),
-				tag: todo_tag_selected_state.tag,
-				tag_id: todo_tag_selected_state.id,
-				steps: { steps: todo_steps_state },
-				focustime: 0,
-				index: todo_index,
-				remindMe: todo_remind_timestamp_state,
-				notes: { notes: todo_notes_option_state },
-				todo_url: url,
-				repeat: todo_repeat_option_state,
-				complete: todo_complete_set_state,
-				important: todo_important_set_state,
-				default: "All",
-				urgent: task_urgency_state,
-			};
-			await todoDB.todos.add(todo);
+			await todoDB.todos.add({ ...todo, date_completed: new Date() });
 
 			repeat(todo).then((data) => {
 				if (data) {
@@ -417,14 +393,17 @@ const AddFeed = () => {
 				}
 			});
 
-			add_session(data_1);
-			session_add({
+			add_month(new Date());
+			stats_add({
+				date: new Date(),
 				tasks: 0,
 				goals: 0,
 				total: 0,
 				todos_count: 1,
 				goals_count: 0,
+				tag: null,
 			});
+			dispatch(reset_timer_feed);
 		} else {
 			await todoDB.todos.add(todo);
 		}
@@ -434,6 +413,8 @@ const AddFeed = () => {
 		dispatch(refresh_list_state);
 		dispatch(list_timeout_clear);
 		clearState();
+
+		handleBack();
 	};
 
 	const add_goal = async () => {
@@ -449,7 +430,7 @@ const AddFeed = () => {
 			date_completed: null,
 			tag: todo_tag_selected_state.tag,
 			tag_id: todo_tag_selected_state.id,
-			deadline: goal_deadline_state
+			deadline: goal_deadline_state,
 		};
 
 		dispatch(goals(goal));
@@ -458,6 +439,8 @@ const AddFeed = () => {
 		await goalDB.goals.add(goal);
 
 		clearState();
+
+		handleBack();
 	};
 
 	const delete_todo = async () => {
@@ -477,11 +460,7 @@ const AddFeed = () => {
 				dispatch(add_switch_add);
 			});
 
-		if (back_index_state === "_list") {
-			history.goBack();
-		} else {
-			history.replace("/");
-		}
+		handleBack();
 	};
 
 	const delete_goal = async () => {
@@ -523,7 +502,7 @@ const AddFeed = () => {
 			dispatch(todos_clear);
 			dispatch(home_timeout_clear);
 			dispatch(navStateLists);
-			dispatch(clear_chart_data);
+			dispatch(reset_timer_feed);
 		}
 
 		return () => {
@@ -556,21 +535,7 @@ const AddFeed = () => {
 					<img
 						src={darkMode ? back_icon_light : back_icon}
 						alt="Go back"
-						onClick={() => {
-							if (switch_to_add === "add" || switch_to_add === "add_") {
-								if (back_index_state === "home" || back_index_state === "/") {
-									history.replace("/");
-								} else {
-									history.goBack();
-								}
-							} else {
-								if (back_index_state === "home" && switch_to_add === "goal") {
-									history.replace("/goals");
-								} else {
-									history.goBack();
-								}
-							}
-						}}
+						onClick={handleBack}
 					/>
 				</span>
 				{switch_to_add === "add_" ? (
@@ -633,19 +598,43 @@ const AddFeed = () => {
 					</>
 				)}
 
-				<div id="create_todo">
+				<div
+					style={{
+						position: "absolute",
+						right: "20px",
+						color: "#1395ff",
+						marginTop: "-25px",
+						fontSize: "14px",
+					}}
+				>
 					{switch_to_add === "add" || switch_to_add === "add_" ? (
 						<>
 							{todo_desc_state && switch_to_add === "add" ? (
-								<Link to="/" onClick={add_todo}>
-									Create
-								</Link>
+								<span onClick={add_todo}>Create</span>
 							) : (
 								<>
 									{switch_to_add === "add" ? (
 										<span style={{ color: "grey" }}>Create</span>
 									) : (
-										<span onClick={delete_todo}>Delete</span>
+										<span
+											style={{
+												color:
+													todo_desc_state && add_task_list_state
+														? "#1395ff"
+														: !add_task_list_state
+														? "#1395ff"
+														: "grey",
+											}}
+											onClick={
+												todo_desc_state && add_task_list_state
+													? add_todo
+													: !add_task_list_state
+													? () => setAboutToDelete(true)
+													: null
+											}
+										>
+											{add_task_list_state ? "Create" : "Delete"}
+										</span>
 									)}
 								</>
 							)}
@@ -655,16 +644,17 @@ const AddFeed = () => {
 							{switch_to_add === "goal" ? (
 								<>
 									{todo_desc_state && goal_summary_state ? (
-										<Link to="/goals" onClick={add_goal}>
-											Create
-										</Link>
+										<span onClick={add_goal}>Create</span>
 									) : (
 										<span style={{ color: "grey" }}>Create</span>
 									)}
 								</>
 							) : (
 								<>
-									<span style={{ color: "#1395ff" }} onClick={delete_goal}>
+									<span
+										style={{ color: "#1395ff" }}
+										onClick={() => setAboutToDelete(true)}
+									>
 										Delete
 									</span>
 								</>
@@ -710,12 +700,63 @@ const AddFeed = () => {
 				</Done>
 			) : null}
 
+			{aboutToDelete ? (
+				<Done load={true} extra={true}>
+					<div className="done_options">
+						<img
+							style={{
+								width: "100px",
+								height: "100px",
+							}}
+							src={delete_icon}
+							alt={`You are about to delete a ${
+								switch_to_add === "add_" ? "task" : "goal"
+							}`}
+						/>
+
+						<div className="done_text">
+							Are you sure you want to delete this{" "}
+							{switch_to_add === "add_" ? "task" : "goal"}
+						</div>
+						<span
+							className="action_button"
+							style={{
+								margin: "0 30px",
+								color: "#1395ff",
+							}}
+							onClick={() => {
+								setAboutToDelete(false);
+								if (switch_to_add === "add_") {
+									delete_todo();
+								} else {
+									delete_goal();
+								}
+							}}
+						>
+							Yes
+						</span>
+						<span
+							className="action_button"
+							style={{
+								margin: "0 30px",
+								color: "#1395ff",
+							}}
+							onClick={() => {
+								setAboutToDelete(false);
+							}}
+						>
+							No
+						</span>
+					</div>
+				</Done>
+			) : null}
+
 			{switch_to_add === "add" || switch_to_add === "add_" ? (
 				<span>
 					<TextBar />
 					<Urgent />
 					<Category />
-					<Tag />
+					<Tag focus={false} />
 					<DueDate />
 					<Remind />
 					<Repeat />
@@ -727,7 +768,7 @@ const AddFeed = () => {
 					<TextBar goal={true} />
 					<Summary />
 					<Deadline />
-					<Tag />
+					<Tag focus={false} />
 					<Notes goal={true} />
 					{task_goal_info}
 				</span>

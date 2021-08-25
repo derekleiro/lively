@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Dexie from "dexie";
-import { useHistory } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import {
 	List,
 	AutoSizer,
@@ -16,7 +16,6 @@ import {
 } from "../../actions/list_feed";
 import { mode } from "../../constants/color";
 
-import "./list-view.css";
 import Card from "../homefeed/card/Card";
 
 import back_icon from "../../assets/icons/back.png";
@@ -26,15 +25,24 @@ import Done from "../done/Done";
 import missing_404 from "../../assets/icons/404.png";
 import delete_list from "../../assets/icons/delete_item.png";
 import { navStateHome } from "../../actions/bottom_nav";
-import { todos_category_remove, todos_clear } from "../../actions/add_feed";
+import {
+	add_switch_add_update,
+	add_task_list,
+	back_index,
+	textarea_state,
+	todos_category_remove,
+	todos_clear,
+	todo_list_selected,
+	todo_repeat_option,
+} from "../../actions/add_feed";
 
-import loading from "../../assets/icons/loading.gif";
 import {
 	add_listview_timeout,
 	home_timeout_clear,
 	listview_timeout_clear,
 	list_timeout_clear,
 } from "../../actions/timeouts";
+import Loading from "../loading/Loading";
 
 const ListViewFeed = () => {
 	const dispatch = useDispatch();
@@ -43,6 +51,7 @@ const ListViewFeed = () => {
 	const list_info = useSelector((state) => state.list_info);
 	const todos_home = useSelector((state) => state.todos.todos);
 	const listview_timeout = useSelector((state) => state.listview_timeout);
+	const tip_state = useSelector((state) => state.tip_state);
 
 	const todos_raw = useSelector((state) => state.list_tasks.todos).sort(
 		(todoA, todoB) => {
@@ -190,15 +199,7 @@ const ListViewFeed = () => {
 			<div style={{ marginTop: "50px" }}></div>
 
 			{listview_timeout === 0 ? (
-				<Done load={true}>
-					<div className="done_options">
-						<img
-							style={{ width: "35px", height: "35px" }}
-							src={loading}
-							alt="Loading your tasks"
-						/>
-					</div>
-				</Done>
+				<Loading />
 			) : (
 				<>
 					{todos.length === 0 && !prompt ? (
@@ -315,6 +316,25 @@ const ListViewFeed = () => {
 				</>
 			)}
 			<div style={{ marginTop: "15px" }}></div>
+			{!list_info.default && (
+				<Link
+					to="/add"
+					onClick={() => {
+						dispatch(todo_list_selected(list_info.name));
+						dispatch(back_index("_list"));
+						dispatch(todo_repeat_option("Never"));
+						dispatch(add_switch_add_update);
+						if (tip_state === 0) {
+							dispatch(textarea_state(true));
+						}
+						dispatch(add_task_list(true));
+					}}
+				>
+					<div className="log-time-btn" style={{ bottom: "25px" }}>
+						+ Add task
+					</div>
+				</Link>
+			)}
 		</div>
 	);
 };

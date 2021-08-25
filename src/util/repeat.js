@@ -1,5 +1,6 @@
 import Dexie from "dexie";
 import moment from "moment";
+import {Plugins} from "@capacitor/core";
 import { v4 as uuidv4 } from "uuid";
 import { schedule_notification } from "./notifications";
 
@@ -123,6 +124,7 @@ const newRemind = (data, repeat, desc, index, todo_data) => {
 
 const repeat = async (data) => {
 	const { repeat } = data;
+	const {Storage} = Plugins;
 
 	if (repeat !== "Never") {
 		const tomorrow = newDueDate(repeat, data.dueDate);
@@ -147,9 +149,10 @@ const repeat = async (data) => {
 
 			const url = generateURL();
 
-			const localindex = JSON.parse(localStorage.getItem("todo_index"));
+			const localIndexRaw = await Storage.get({key: "todo_index"})
+			const localindex = JSON.parse(localIndexRaw.value);
 			const index = localindex + 1;
-			localStorage.setItem("todo_index", index);
+			await Storage.set({key: "todo_index", value: JSON.stringify(index)})
 
 			const new_todo = {
 				desc: data.desc,
@@ -183,7 +186,6 @@ const repeat = async (data) => {
 			};
 
 			await db.todos.add(new_todo);
-
 			return new_todo;
 		} else {
 			return null;

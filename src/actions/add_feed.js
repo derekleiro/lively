@@ -124,6 +124,10 @@ export const todos_clear = {
 	type: "HANDLE_TODOS_CLEAR",
 };
 
+export const goals_clear = {
+	type: "HANDLE_GOALS_CLEAR",
+};
+
 export const dispatch_goals = (data) => {
 	return {
 		type: "DISPATCH_GOALS",
@@ -411,6 +415,13 @@ export const todo_index = (data) => {
 export const back_index = (data) => {
 	return {
 		type: "HANDLE_BACK_INDEX",
+		payload: data,
+	};
+};
+
+export const add_task_list = (data) => {
+	return {
+		type: "HANDLE_ADD_TASK_LIST",
 		payload: data,
 	};
 };

@@ -1,0 +1,29 @@
+#time_slider_container {
+	display: flex;
+    align-items: center;
+    position: relative;
+    margin-bottom: 15px;
+}
+
+#time_slider {
+	height: 20px;
+	border-radius: 35px;
+    flex: 1;
+    position: relative;
+}
+
+.time_slider_controls img {
+	width: 25px;
+	height: 25px;
+    padding: 10px;
+}
+
+#time_slider_filler {
+	transition: all ease-in-out 400ms;
+	background: #1395ff;
+	position: absolute;
+	left: 0;
+	width: 10%;
+	border-radius: 35px;
+	height: 20px;
+}

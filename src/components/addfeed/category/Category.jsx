@@ -299,7 +299,6 @@ const Category = () => {
 								name="new list"
 								ref={(c) => textarea(c)}
 								placeholder="New list name..."
-								className=""
 								style={{
 									color: darkMode ? "white" : "black",
 									fontSize: "14px",

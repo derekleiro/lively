@@ -16,6 +16,9 @@ import tag_icon from "../../../assets/icons/tag.png";
 import tag_light from "../../../assets/icons/tag_light.png";
 import remind_icon from "../../../assets/icons/remind.png";
 import remind_light from "../../../assets/icons/remind_light.png";
+import focused_for_icon from "../../../assets/icons/timer.png";
+import focused_for_icon_light from "../../../assets/icons/timer_light.png";
+
 import {
 	todo_desc,
 	goal_summary,
@@ -38,41 +41,34 @@ import {
 } from "../../../actions/add_feed";
 import { focus_info } from "../../../actions/focus_feed";
 
-import completed_sound from "../../../assets/sounds/for-sure.webm";
-import add_session from "../../../util/session";
-import {
-	edit_timer_feed,
-	edit_timer_feed_today,
-	edit_timer_feed_week,
-} from "../../../actions/timer_feed";
+import completed_sound from "../../../assets/sounds/for-sure.ogg";
+import add_month from "../../../util/add_month";
+import { reset_timer_feed } from "../../../actions/timer_feed";
 import {
 	goal_complete_timeout,
 	goal_complete_timeout_reset,
 } from "../../../actions/timeouts";
-import { session_add } from "../../../util/session_add";
+import { stats_add } from "../../../util/stats_add";
 
 const sound = new Howl({
 	src: [completed_sound],
 	html5: true,
 	preload: true,
-	format: ["webm"],
+	format: ["ogg"],
 });
 
 const Goal = (props) => {
 	const dispatch = useDispatch();
 	const darkMode = useSelector((state) => state.dark_mode);
-	const timer_feed = useSelector((state) => state.timer_feed);
 	const goal_complete_state = useSelector((state) => state.goal_complete);
 
 	const checked = props.complete;
 	const stepsDone = props.steps.filter((step) => step.complete === 1).length;
 
-	const month = moment(new Date()).format("MMMM");
-	const year = moment(new Date()).format("yyyy");
-
 	const style = {
 		color: "grey",
 		marginTop: "10px",
+		paddingTop: "0px",
 		lineHeight: "normal",
 	};
 
@@ -92,11 +88,7 @@ const Goal = (props) => {
 		} else if (minutes < 60 && minutes > 1) {
 			return `${minutes} mins`;
 		} else if (time % 3600 === 0) {
-			if (time > 3600) {
-				return `${hours} h`;
-			} else if (time === 3600) {
-				return `${hours} h`;
-			}
+			return `${hours} h`;
 		} else if (minutes > 60 && minutes < 120) {
 			return `${hours} h ${minutes % 60} mins`;
 		} else {
@@ -125,40 +117,18 @@ const Goal = (props) => {
 				})
 				.modify({ complete: 0, date_completed: null });
 
-			const data = {
-				month,
-				year,
-				createdAt: new Date(),
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-				completedGoals: -1,
-				completedTasks: 0,
-			};
+			add_month(new Date());
+			dispatch(reset_timer_feed);
 
-			add_session(data);
-			if (timer_feed.length !== 0) {
-				dispatch(edit_timer_feed(data));
-			}
-
-			session_add({
+			stats_add({
+				date: new Date(),
 				tasks: 0,
 				goals: 0,
 				total: 0,
 				todos_count: 0,
 				goals_count: -1,
+				tag: null,
 			});
-
-			const data_ = {
-				tasks: 0,
-				goals: -1,
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-			};
-
-			dispatch(edit_timer_feed_today(data_));
-			dispatch(edit_timer_feed_week(data_));
 		} else {
 			const goal = {
 				goal_url: props.URL,
@@ -182,41 +152,19 @@ const Goal = (props) => {
 
 			sound.play();
 
-			const data = {
-				month,
-				year,
-				createdAt: new Date(),
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-				completedGoals: 1,
-				completedTasks: 0,
-			};
+			add_month(new Date());
 
-			add_session(data);
-
-			if (timer_feed.length !== 0) {
-				dispatch(edit_timer_feed(data));
-			}
-
-			session_add({
+			stats_add({
+				date: new Date(),
 				tasks: 0,
 				goals: 0,
 				total: 0,
 				todos_count: 0,
 				goals_count: 1,
+				tag: null,
 			});
 
-			const data_ = {
-				tasks: 0,
-				goals: 1,
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-			};
-
-			dispatch(edit_timer_feed_today(data_));
-			dispatch(edit_timer_feed_week(data_));
+			dispatch(reset_timer_feed);
 
 			await db.goals
 				.filter((goal) => {
@@ -242,9 +190,9 @@ const Goal = (props) => {
 		dispatch(handle_url(props.URL));
 		dispatch(handle_date_completed(props.date_completed));
 		dispatch(todo_tag_selected({ tag: props.tag, id: props.tag_id }));
-		dispatch(goal_deadline(props.deadline ? props.deadline : null))
+		dispatch(goal_deadline(props.deadline ? props.deadline : null));
 		if (props.completedView) {
-			dispatch(back_index("g_completed"))
+			dispatch(back_index("g_completed"));
 			dispatch(goal_index_completed);
 		} else {
 			dispatch(goal_index_home);
@@ -318,27 +266,27 @@ const Goal = (props) => {
 					</div>
 				</Link>
 				{props.deadline && props.complete === 0 ? (
-                    <div
-                        className="card-desc"
-                        style={{
-                            color: "#1395ff",
-                            marginTop: "15px",
-                            lineHeight: "1.8em",
-                        }}
-                    >
-                        <img
-                            src={darkMode ? remind_light : remind_icon}
-                            alt="Start focus"
-                            style={{
-                                width: "20px",
-                                height: "20px",
-                                verticalAlign: "middle",
-                                marginRight: "5px",
-                            }}
-                        />
-                        {moment(props.deadline).fromNow()}
-                    </div>
-                ) : null}
+					<div
+						className="card-desc"
+						style={{
+							color: "#1395ff",
+							marginTop: "15px",
+							lineHeight: "1.8em",
+						}}
+					>
+						<img
+							src={darkMode ? remind_light : remind_icon}
+							alt="Start focus"
+							style={{
+								width: "20px",
+								height: "20px",
+								verticalAlign: "middle",
+								marginRight: "5px",
+							}}
+						/>
+						{moment(props.deadline).fromNow()}
+					</div>
+				) : null}
 
 				<div
 					className="card-desc"
@@ -360,7 +308,7 @@ const Goal = (props) => {
 								</span>
 							</Link>
 
-							{props.notes.length !== 0 || props.focustime || props.tag ? (
+							{props.notes.length !== 0 || props.focustime || props.tag || props.steps.length !== 0 ? (
 								<span
 									style={{ margin: `0 5px` }}
 									dangerouslySetInnerHTML={{
@@ -371,10 +319,19 @@ const Goal = (props) => {
 						</span>
 					)}
 
-					{props.focustime ? <>Focused for: {readableTime(props.focustime)}</> : null}
+					{props.focustime ? (
+						<span className="start_focus">
+							<img
+								src={darkMode ? focused_for_icon_light : focused_for_icon}
+								alt="Start focus"
+							/>{" "}
+							{readableTime(props.focustime)}
+						</span>
+					) : null}
+					
 					{props.tag ? (
-						<span className="card-due-section">
-							{props.focustime !== 0 ? (
+						<span className="card-due-section" style={{ paddingTop: "0px" }}>
+							{props.focustime ? (
 								<span
 									style={{ margin: `0 5px` }}
 									dangerouslySetInnerHTML={{
@@ -395,7 +352,7 @@ const Goal = (props) => {
 
 					{props.steps.length !== 0 ? (
 						<>
-							{props.focustime !== 0 || props.tag ? (
+							{props.tag || props.focustime ? (
 								<span
 									style={{ margin: `0 5px` }}
 									dangerouslySetInnerHTML={{
@@ -403,13 +360,14 @@ const Goal = (props) => {
 									}}
 								></span>
 							) : null}
-							{stepsDone} of {props.steps.length} steps
+							{stepsDone} of {props.steps.length}{" "}
+							{props.steps.length > 1 ? "Steps" : "Step"}
 						</>
 					) : null}
 
 					{props.notes.length !== 0 ? (
 						<>
-							{props.steps.length !== 0 || props.focustime ? (
+							{props.steps.length !== 0 || props.tag || props.focustime? (
 								<span
 									style={{ margin: `0 5px` }}
 									dangerouslySetInnerHTML={{
@@ -417,9 +375,7 @@ const Goal = (props) => {
 									}}
 								></span>
 							) : null}
-							{props.notes.length > 1
-								? `${props.notes.length} Notes`
-								: `${props.notes.length} Note`}
+							{props.notes.length} {props.notes.length > 1 ? "Notes" : "Note"}
 						</>
 					) : null}
 				</div>

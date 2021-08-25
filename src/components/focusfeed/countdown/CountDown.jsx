@@ -6,6 +6,7 @@ import Dexie from "dexie";
 import moment from "moment";
 import { Howl } from "howler";
 import confetti from "canvas-confetti";
+import { MusicControls } from "@ionic-native/music-controls";
 
 import "./count-down.css";
 
@@ -21,31 +22,27 @@ import {
 	completed_goals,
 } from "../../../actions/add_feed";
 
-import completed_sound from "../../../assets/sounds/for-sure.webm";
+import completed_sound from "../../../assets/sounds/for-sure.ogg";
+import notify_icon from "../../../assets/icons/keep_going.png";
 
-import add_session from "../../../util/session";
-import {
-	edit_chart_data,
-	edit_timer_feed,
-	edit_timer_feed_today,
-	edit_timer_feed_week,
-	most_focused_edit,
-} from "../../../actions/timer_feed";
+import add_month from "../../../util/add_month";
 import repeat from "../../../util/repeat";
 import tag_ from "../../../util/tag";
-import { session_add } from "../../../util/session_add";
+import { stats_add } from "../../../util/stats_add";
 import { set_list_complete } from "../../../util/new_default_lists";
 import Ambience from "./Ambience";
+import { reset_timer_feed } from "../../../actions/timer_feed";
+import { handleEntry } from "../../../util/add_entry";
 
 const sound = new Howl({
 	src: [completed_sound],
 	html5: true,
 	preload: true,
-	format: ["webm"],
+	format: ["ogg"],
 });
 
 const CountDown = (props) => {
-	const { LocalNotifications } = Plugins;
+	const { LocalNotifications, Storage } = Plugins;
 
 	const dispatch = useDispatch();
 	const history = useHistory();
@@ -60,25 +57,15 @@ const CountDown = (props) => {
 		"Sometimes you have to experience what you don't want in life to come to a full understanding of what you do want ❤",
 	];
 
-	const timer_feed = useSelector((state) => state.timer_feed);
-	const chart_data = useSelector((state) => state.chart_data);
 	const home_todos = useSelector((state) => state.todos.todos);
 	const goals_state = useSelector((state) => state.goals.goals);
+	const name_state = useSelector((state) => state.name);
+	const data_local = props.dataLocal;
 
 	const [mins, setMins] = useState(0);
 	const [secs, setSecs] = useState(0);
 	const [hours, setHours] = useState(0);
 	const [done, setDone] = useState(false);
-	const [data_local, setDataLocal] = useState(
-		JSON.parse(localStorage.getItem("extra_data"))
-	);
-
-	const month = moment(new Date()).format("MMMM");
-	const year = moment(new Date()).format("yyyy");
-
-	const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
-	const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
-	const month_timestamp = Date.parse(localStorage.getItem("month_timestamp"));
 
 	let timer_interval;
 
@@ -102,40 +89,32 @@ const CountDown = (props) => {
 		tags: `id,total_focus,today,week,month`,
 	});
 
-	const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-	const randomInRange = (min, max) => {
-		return Math.random() * (max - min) + min;
-	};
-
 	const celebration = {
 		wohoo: () => {
-			let count = 0;
-			const interval = setInterval(() => {
-				const particleCount = 50;
-				confetti(
-					Object.assign({}, defaults, {
-						particleCount,
-						origin: {
-							x: randomInRange(0.1, 0.3),
-							y: Math.random() - 0.2,
-						},
-					})
-				);
-				confetti(
-					Object.assign({}, defaults, {
-						particleCount,
-						origin: {
-							x: randomInRange(0.7, 0.9),
-							y: Math.random() - 0.2,
-						},
-					})
-				);
-				count = count + 1;
-				if (count >= 3) {
-					clearInterval(interval);
+			var end = Date.now() + 3 * 1000;
+
+			var colors = ["#1395ff", "#ff1395"];
+
+			(function frame() {
+				confetti({
+					particleCount: 1,
+					angle: 60,
+					spread: 55,
+					origin: { x: 0 },
+					colors: colors,
+				});
+				confetti({
+					particleCount: 2,
+					angle: 120,
+					spread: 55,
+					origin: { x: 1 },
+					colors: colors,
+				});
+
+				if (Date.now() < end) {
+					requestAnimationFrame(frame);
 				}
-			}, 333);
+			})();
 		},
 	};
 
@@ -150,11 +129,7 @@ const CountDown = (props) => {
 		} else if (minutes < 60 && minutes > 1) {
 			return `${minutes} mins`;
 		} else if (time % 3600 === 0) {
-			if (time > 3600) {
-				return `${hours} h`;
-			} else if (time === 3600) {
-				return `${hours} h`;
-			}
+			return `${hours} h`;
 		} else if (minutes > 60 && minutes < 120) {
 			return `${hours} h ${minutes % 60} mins`;
 		} else {
@@ -163,88 +138,51 @@ const CountDown = (props) => {
 	};
 
 	const save_tag = () => {
-		if (chart_data.today !== null && chart_data.week !== null) {
-			dispatch(
-				edit_chart_data({
-					id: data_local.tag_id,
-					focustime: data_local.time,
-				})
-			);
-
-			dispatch(
-				most_focused_edit({
-					id: data_local.tag_id,
-					focustime: data_local.time,
-					data: chart_data,
-				})
-			);
-		}
-
-		const time = {
-			today: today_timestamp,
-			week: week_timestamp,
-			month: month_timestamp,
-		};
-
 		const data_ = {
 			id: data_local.tag_id,
 			total_focus: data_local.time,
 			name: data_local.tag,
-			today: {
-				focused: data_local.time,
-			},
-			week: {
-				focused: data_local.time,
-			},
-			month: {
-				focused: data_local.time,
-			},
 		};
 
-		tag_(data_, time);
+		tag_(data_);
 	};
 
 	const save_session = async () => {
 		celebration.wohoo();
-		localStorage.setItem("new_focus", true);
-		localStorage.setItem("new_focus_week", true);
 
 		if (data_local) {
 			if (data_local.type === "goal") {
-				const data = {
-					month,
-					year,
-					createdAt: new Date(),
-					totalFocus: data_local.time,
-					tasksFocus: 0,
-					goalsFocus: data_local.time,
-					completedGoals: 0,
-					completedTasks: 0,
-				};
+				add_month(new Date());
 
-				add_session(data);
-				if (timer_feed.length !== 0) {
-					dispatch(edit_timer_feed(data));
-				}
-
-				session_add({
+				stats_add({
+					date: data_local.event_time,
 					tasks: 0,
 					goals: data_local.time,
 					total: data_local.time,
 					todos_count: 0,
 					goals_count: 0,
+					tag: data_local.tag
+						? {
+								id: data_local.tag_id,
+								time: data_local.time,
+								name: data_local.tag,
+						  }
+						: null,
 				});
 
-				const data_ = {
-					tasks: 0,
-					goals: 0,
-					totalFocus: data_local.time,
-					tasksFocus: 0,
-					goalsFocus: data_local.time,
-				};
+				handleEntry({
+					date: data_local.event_time,
+					type: "focus",
+					time: data_local.time,
+					tag: data_local.tag
+						? {
+								id: data_local.tag_id,
+								name: data_local.tag,
+						  }
+						: null,
+				});
 
-				dispatch(edit_timer_feed_today(data_));
-				dispatch(edit_timer_feed_week(data_));
+				dispatch(reset_timer_feed);
 
 				if (data_local.tag) {
 					save_tag();
@@ -267,44 +205,43 @@ const CountDown = (props) => {
 						}
 					});
 			} else if (data_local.type === "task") {
-				const data = {
-					month,
-					year,
-					createdAt: new Date(),
-					totalFocus: data_local.time,
-					tasksFocus: data_local.time,
-					goalsFocus: 0,
-					completedGoals: 0,
-					completedTasks: 0,
-				};
+				add_month(new Date());
 
-				add_session(data);
-				if (timer_feed.length !== 0) {
-					dispatch(edit_timer_feed(data));
-				}
-
-				session_add({
+				stats_add({
+					date: data_local.event_time,
 					tasks: data_local.time,
 					goals: 0,
 					total: data_local.time,
 					todos_count: 0,
 					goals_count: 0,
+					tag: data_local.tag
+						? {
+								id: data_local.tag_id,
+								time: data_local.time,
+								name: data_local.tag,
+						  }
+						: null,
 				});
+
+				handleEntry({
+					date: data_local.event_time,
+					type: "focus",
+					time: data_local.time,
+					tag: data_local.tag
+						? {
+								id: data_local.tag_id,
+								name: data_local.tag,
+						  }
+						: null,
+				});
+
+				dispatch(reset_timer_feed);
 
 				if (data_local.tag) {
 					save_tag();
 				}
 
-				const data_2 = {
-					tasks: 0,
-					goals: 0,
-					totalFocus: data_local.time,
-					tasksFocus: data_local.time,
-					goalsFocus: 0,
-				};
-
-				dispatch(edit_timer_feed_today(data_2));
-				dispatch(edit_timer_feed_week(data_2));
+				dispatch(reset_timer_feed);
 
 				await todoDB.todos
 					.filter((todo) => {
@@ -324,109 +261,70 @@ const CountDown = (props) => {
 					});
 			} else {
 				if (data_local.tag) {
-					if (chart_data.today !== null && chart_data.week !== null) {
-						dispatch(
-							edit_chart_data({
-								id: data_local.tag_id,
-								focustime: data_local.time,
-							})
-						);
-
-						dispatch(
-							most_focused_edit({
-								id: data_local.tag_id,
-								focustime: data_local.time,
-								data: chart_data,
-							})
-						);
-					}
-
-					const time = {
-						today: today_timestamp,
-						week: week_timestamp,
-						month: month_timestamp,
-					};
-
-					const data_ = {
-						id: data_local.tag_id,
-						total_focus: data_local.time,
-						name: data_local.tag,
-						today: {
-							focused: data_local.time,
-						},
-						week: {
-							focused: data_local.time,
-						},
-						month: {
-							focused: data_local.time,
-						},
-					};
-
-					tag_(data_, time);
+					save_tag();
 				}
 
-				const data = {
-					month,
-					year,
-					createdAt: new Date(),
-					totalFocus: data_local.time,
-					tasksFocus: 0,
-					goalsFocus: 0,
-					completedGoals: 0,
-					completedTasks: 0,
-				};
+				add_month(new Date());
 
-				add_session(data);
-				if (timer_feed.length !== 0) {
-					dispatch(edit_timer_feed(data));
-				}
-
-				session_add({
+				stats_add({
+					date: data_local.event_time,
 					tasks: 0,
 					goals: 0,
 					total: data_local.time,
 					todos_count: 0,
 					goals_count: 0,
+					tag: data_local.tag
+						? {
+								id: data_local.tag_id,
+								time: data_local.time,
+								name: data_local.tag,
+						  }
+						: null,
+				});
+				
+				handleEntry({
+					date: data_local.event_time,
+					type: "focus",
+					time: data_local.time,
+					tag: data_local.tag
+						? {
+								id: data_local.tag_id,
+								name: data_local.tag,
+						  }
+						: null,
 				});
 
-				const data_ = {
-					tasks: 0,
-					goals: 0,
-					totalFocus: data_local.time,
-					tasksFocus: 0,
-					goalsFocus: 0,
-				};
-
-				dispatch(edit_timer_feed_today(data_));
-				dispatch(edit_timer_feed_week(data_));
+				dispatch(reset_timer_feed);
 			}
 		}
 	};
 
 	const notify = async () => {
-		await LocalNotifications.schedule({
-			notifications: [
-				{
-					title: "Focus session",
-					body: `Your session will end at ${moment(
-						data_local.event_time
-					).format("LT")}`,
-					id: 111222334,
-					sound: null,
-					attachments: null,
-					actionTypeId: "",
-					extra: null,
-					ongoing: true,
-					autoCancel: false,
-				},
-			],
+		MusicControls.create({
+			track: "Focus session",
+			artist: `Your session will end at ${moment(data_local.event_time).format(
+				"LT"
+			)}`,
+			cover: notify_icon,
+			isPlaying: false,
+			dismissable: false,
+
+			hasPrev: false,
+			hasNext: false,
+
+			// ANDROID ONLY
+			notificationIcon: "ic_stat_name",
+			ticker: `0${hours}:${mins < 60 ? `0${mins}` : mins}:${
+				secs < 60 ? `0${secs}` : secs
+			}`,
 		});
 	};
 
 	const remove_notif = async () => {
+		MusicControls.destroy();
 		const nots = await LocalNotifications.getPending();
 		await LocalNotifications.cancel({
-			notifications: nots.notifications.filter((not) => not.id === "111222334"),
+			notifications: nots.notifications.filter((not) => not.id === "111222333"),
 		});
 	};
 
@@ -438,12 +336,14 @@ const CountDown = (props) => {
 			await LocalNotifications.schedule({
 				notifications: [
 					{
-						title: "Keep it going! 🎉🎊",
-						body: `You have successfully focused for ${readableTime(
+						title: "Keep on going! 🎉🎊",
+						body: `${
+							name_state ? `${name_state}, ` : ""
+						}you have successfully focused for ${readableTime(
 							data_local.time
 						)} ${data_local.type !== null ? `on your ${data_local.type}` : ""}`,
 						id: 111222333,
-						schedule: { at: data_local.event_time },
+						schedule: { at: data_local.event_time, allowWhenIdle: true },
 						sound: null,
 						attachments: null,
 						actionTypeId: "",
@@ -469,8 +369,8 @@ const CountDown = (props) => {
 					props.handleTimeSet();
 					setDone(true);
 					remove_notif();
-					save_session().then(() => {
-						localStorage.removeItem("focus");
+					save_session().then(async () => {
+						await Storage.remove({ key: "focus" });
 					});
 					clearInterval(timer_interval);
 				}
@@ -479,29 +379,16 @@ const CountDown = (props) => {
 	};
 
 	const terminate_countdown = async () => {
-		const nots = await LocalNotifications.getPending();
-		await LocalNotifications.cancel({
-			notifications: nots.notifications.filter((not) => not.id === "111222333"),
-		});
-
 		remove_notif();
 		clearInterval(timer_interval);
 	};
 
 	useEffect(() => {
-		let unmounted = false;
-
 		notify();
-
-		if (!unmounted) {
-			setDataLocal(JSON.parse(localStorage.getItem("extra_data")));
-		}
-
 		startTimer();
 
 		return () => {
 			terminate_countdown();
-			unmounted = true;
 		};
 	}, []);
 
@@ -526,17 +413,6 @@ const CountDown = (props) => {
 	const mark_as_done = async () => {
 		if (data_local) {
 			if (data_local.type === "goal") {
-				const data = {
-					month,
-					year,
-					createdAt: new Date(),
-					totalFocus: 0,
-					tasksFocus: 0,
-					goalsFocus: 0,
-					completedGoals: 1,
-					completedTasks: 0,
-				};
-
 				if (goals_state.length !== 0) {
 					dispatch(
 						goal_complete({
@@ -546,12 +422,10 @@ const CountDown = (props) => {
 					);
 				}
 
-				add_session(data);
-				if (timer_feed.length !== 0) {
-					dispatch(edit_timer_feed(data));
-				}
+				add_month(new Date());
 
-				session_add({
+				stats_add({
+					date: data_local.event_time,
 					tasks: 0,
 					goals: 0,
 					total: 0,
@@ -559,16 +433,7 @@ const CountDown = (props) => {
 					goals_count: 1,
 				});
 
-				const data_ = {
-					tasks: 0,
-					goals: 1,
-					totalFocus: 0,
-					tasksFocus: 0,
-					goalsFocus: 0,
-				};
-
-				dispatch(edit_timer_feed_today(data_));
-				dispatch(edit_timer_feed_week(data_));
+				dispatch(reset_timer_feed);
 
 				await goalDB.goals
 					.filter((goal) => {
@@ -594,17 +459,6 @@ const CountDown = (props) => {
 
 				history.replace("/congrats");
 			} else {
-				const data = {
-					month,
-					year,
-					createdAt: new Date(),
-					totalFocus: 0,
-					tasksFocus: 0,
-					goalsFocus: 0,
-					completedGoals: 0,
-					completedTasks: 1,
-				};
-
 				set_list_complete();
 
 				if (home_todos.length !== 0) {
@@ -616,12 +470,10 @@ const CountDown = (props) => {
 					);
 				}
 
-				add_session(data);
-				if (timer_feed.length !== 0) {
-					dispatch(edit_timer_feed(data));
-				}
+				add_month(new Date());
 
-				session_add({
+				stats_add({
+					date: data_local.event_time,
 					tasks: 0,
 					goals: 0,
 					total: 0,
@@ -629,16 +481,7 @@ const CountDown = (props) => {
 					goals_count: 0,
 				});
 
-				const data_ = {
-					tasks: 1,
-					goals: 0,
-					totalFocus: 0,
-					tasksFocus: 0,
-					goalsFocus: 0,
-				};
-
-				dispatch(edit_timer_feed_today(data_));
-				dispatch(edit_timer_feed_week(data_));
+				dispatch(reset_timer_feed);
 
 				await todoDB.todos
 					.filter((todo) => {
@@ -720,10 +563,14 @@ const CountDown = (props) => {
 				</Done>
 			) : (
 				<span style={{ overflow: "auto" }}>
-					{data_local.type === null ? (
-						<div className="done_text">
-							Either you run the day, or the day runs you. -Jim Rohn
-						</div>
+					{data_local ? (
+						<>
+							{data_local.type === null ? (
+								<div className="done_text">
+									Either you run the day, or the day runs you. -Jim Rohn
+								</div>
+							) : null}{" "}
+						</>
 					) : null}
 
 					{hours ? (
@@ -750,15 +597,19 @@ const CountDown = (props) => {
 							</>
 						) : (
 							<>
-								{data_local.time > 3600 ? (
+								{data_local ? (
 									<>
-										<span className="title" style={style}>
-											00
-										</span>
-										<span className="title" style={style}>
-											{" "}
-											:{" "}
-										</span>
+										{data_local.time > 3600 ? (
+											<>
+												<span className="title" style={style}>
+													00
+												</span>
+												<span className="title" style={style}>
+													{" "}
+													:{" "}
+												</span>
+											</>
+										) : null}
 									</>
 								) : null}
 							</>

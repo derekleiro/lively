@@ -1,11 +1,3 @@
-#create_todo{
-    position: absolute;
-    right: 20px;
-    color: #1395ff;
-    margin-top: -25px;
-    font-size: 14px;
-}
-
 .fade_page{
     opacity: 0;
 }

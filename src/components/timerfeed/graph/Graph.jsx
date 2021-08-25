@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import moment from "moment";
 import { useSelector } from "react-redux";
 import { Pie, defaults } from "react-chartjs-2";
 import { merge } from "lodash";
@@ -9,34 +8,59 @@ import "./graph.css";
 const Graph = (props) => {
 	const darkMode = useSelector((state) => state.dark_mode);
 
-	const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
-	const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
 	const toggle_state = useSelector((state) => state.toggle);
-
-	const new_focus = JSON.parse(localStorage.getItem("new_focus"));
-	const new_focus_week = JSON.parse(localStorage.getItem("new_focus_week"));
 	const focus_timeout = useSelector((state) => state.focus_timeout);
 
-	const [show_state, setShowState] = useState(false);
-	const [graph, setData] = useState({ data: { values: [], labels: [] } });
+	const [data, setData] = useState({ data: { values: [], labels: [] } });
 
-	const show_valid_data = (data_list, labels_list) => {
-		const new_data_list = [];
+	const readableTime = (time) => {
+		const hours = Math.floor(time / 3600);
+		const minutes = Math.floor(time / 60);
+
+		if (minutes === 1) {
+			return `${minutes} mins`;
+		} else if (minutes < 1) {
+			return `Less than a minute`;
+		} else if (minutes < 60 && minutes > 1) {
+			return `${minutes} mins`;
+		} else if (time % 3600 === 0) {
+			return `${hours} h`;
+		} else if (minutes > 60 && minutes < 120) {
+			return `${hours} h ${minutes % 60} mins`;
+		} else {
+			return `${hours} h ${minutes % 60 !== 0 ? ` ${minutes % 60} mins` : ``}`;
+		}
+	};
+
+	const show_valid_data = (times_list, labels_list) => {
 		const new_labels_list = [];
-		const index_list = [];
+		const temp_time_list = [];
 
-		data_list.map((item, index) => {
-			if (item > 0) {
-				new_data_list.push(item);
-				index_list.push(index);
+		const final_labels = [];
+		const final_times = [];
+
+		labels_list.forEach((item, index) => {
+			new_labels_list.push(`${item}: [ ${readableTime(times_list[index])} ]`);
+		});
+
+		times_list.forEach((time, index) => {
+			temp_time_list.push({ time, index });
+		});
+
+		const sorted_temp_time_list = temp_time_list.sort((a, b) => b.time - a.time);
+		sorted_temp_time_list.forEach((item, index) => {
+			if(labels_list[item.index] !== "Others"){
+				final_times.push(item.time)
+				final_labels.push(new_labels_list[item.index])
 			}
 		});
 
-		index_list.map((index) => {
-			new_labels_list.push(labels_list[index]);
-		});
+		if(new_labels_list[new_labels_list.length - 1] === "Others"){
+			final_labels.push(new_labels_list[new_labels_list.length - 1]);
+			final_times.push(times_list[times_list.length - 1]);
+		}
 
-		return { values: new_data_list, labels: new_labels_list };
+		return { labels: final_labels, times: final_times };
 	};
 
 	merge(defaults, {
@@ -47,7 +71,7 @@ const Graph = (props) => {
 		},
 	});
 	const graphdata = {
-		labels: props.data !== null ? [...graph.data.labels] : [],
+		labels: props.data !== null ? data.labels : [],
 		datasets: [
 			{
 				label: "Focused time: tags (minutes)",
@@ -60,6 +84,7 @@ const Graph = (props) => {
 					"#24CFC7",
 					"#2AE2B5",
 					"#30F5A2",
+					"#03be71",
 				],
 				borderColor: darkMode ? "#000" : "#fafafa",
 				borderCapStyle: "butt",
@@ -75,7 +100,7 @@ const Graph = (props) => {
 				pointHoverBorderWidth: 2,
 				pointRadius: 1,
 				pointHitRadius: 10,
-				data: props.data !== null ? [...graph.data.values] : [],
+				data: props.data !== null ? data.times : [],
 			},
 		],
 		options: {
@@ -87,39 +112,12 @@ const Graph = (props) => {
 		},
 	};
 
-	const blank_graph = {
-		labels: props.data !== null ? [...graph.data.labels] : [],
-		datasets: [
-			{
-				label: "Focused time: tags (minutes)",
-				fill: false,
-				lineTension: 0.1,
-				backgroundColor: "#1395ff",
-				borderColor: "#1395ff",
-				borderCapStyle: "butt",
-				borderDash: [],
-				borderDashOffset: 0.0,
-				borderJoinStyle: "miter",
-				pointBorderColor: "rgba(75,192,192,1)",
-				pointBackgroundColor: "#fff",
-				pointBorderWidth: 1,
-				pointHoverRadius: 5,
-				pointHoverBackgroundColor: "rgba(75,192,192,1)",
-				pointHoverBorderColor: "rgba(220,220,220,1)",
-				pointHoverBorderWidth: 2,
-				pointRadius: 1,
-				pointHitRadius: 10,
-				data: [],
-			},
-		],
-	};
-
 	useEffect(() => {
 		let unmounted = false;
-		const data_ = show_valid_data(props.data.values, props.data.labels);
+		const data_ = show_valid_data(props.data.times, props.data.labels);
 
 		if (!unmounted) {
-			setData({ data: { values: data_.values, labels: data_.labels } });
+			setData(data_);
 		}
 
 		return () => {
@@ -127,39 +125,10 @@ const Graph = (props) => {
 		};
 	}, [toggle_state, focus_timeout]);
 
-	useEffect(() => {
-		let unmounted = false;
-
-		if (toggle_state) {
-			const now = moment();
-			const days_passed = now.diff(week_timestamp, "days");
-
-			if (days_passed >= 0 && days_passed <= 7 && new_focus_week) {
-				if (!unmounted) {
-					setShowState(true);
-				}
-			} else {
-				setShowState(false);
-			}
-		} else {
-			if (moment(today_timestamp).calendar().includes("Today") && new_focus) {
-				if (!unmounted) {
-					setShowState(true);
-				}
-			} else {
-				setShowState(false);
-			}
-		}
-
-		return () => {
-			unmounted = true;
-		};
-	}, [toggle_state, new_focus, new_focus_week, focus_timeout]);
-
 	return (
 		<div className="pie">
 			<Pie
-				data={show_state ? graphdata : blank_graph}
+				data={graphdata}
 				height={400}
 				options={{
 					maintainAspectRatio: true,

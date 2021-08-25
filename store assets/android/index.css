@@ -1,20 +1,23 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200&display=swap");
 
 body {
-    font-family: "Poppins", sans-serif;
-    display: flex;
-    vertical-align: middle;
-    align-items: center;
-    font-size: 30px;
-    background: #fafafa;
+	font-family: "Poppins", sans-serif;
+	display: flex;
+	vertical-align: middle;
+	align-items: center;
+	font-size: 30px;
+	background: #fafafa;
 }
 
-#content{
-    margin: 0 auto;
+#content {
+	margin: 0 auto;
+    width: 1024px;
+	height: 500px;
+    border: solid 1px #1395ff;
+    position: relative;
 }
 
-#logo img{
-    vertical-align: middle;
-    width: 85px;
-    height: auto;
+img {
+    object-fit: contain;
+    width: 100%;
 }

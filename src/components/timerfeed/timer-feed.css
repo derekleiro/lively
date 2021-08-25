@@ -1,32 +1,37 @@
-.top_highlight_contain{
-    padding-bottom: 25px;
+.top_highlight_contain {
+	padding-bottom: 25px;
 }
 
-.top_highlights{
-    display: flex; 
-    margin-top: 15px;   
+.top_highlights {
+	display: flex;
+	margin-top: 15px;
 }
 
-._highlight{
-    flex: 1;
+._highlight {
+	display: flex;
+	flex: 1;
+	min-height: 125px;
+	align-items: center;
+	justify-items: center;
+	text-align: center;
 }
 
-._highlight:last-child{
-    text-align: right;
+._highlight_contain {
+	margin: 0 auto;
 }
 
-._value{
-    margin-bottom: 10px;
-    color: #1395ff;
+._value {
+	margin-bottom: 10px;
+	color: #1395ff;
 }
 
-.tip{
-    margin: 10px 0;
-    text-align: center;
+.tip {
+	margin: 10px 0;
+	text-align: center;
 }
 
-.tip img{
-    width: 20px;
-    height: 20px;
-    vertical-align: middle;
+.tip img {
+	width: 20px;
+	height: 20px;
+	vertical-align: middle;
 }

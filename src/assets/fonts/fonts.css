@@ -1,11 +1,11 @@
 @font-face {
 	font-family: "Poppins";
 	font-display: swap;
-	src: url(WoffFonts/Poppins-Regular.woff2);
+	src: url(WoffFonts/Poppins-Regular.woff2) format("woff2");
 }
 
 @font-face {
 	font-family: "Poppins Bold";
 	font-display: swap;
-	src: url(WoffFonts/Poppins-Bold.woff2);
+	src: url(WoffFonts/Poppins-Bold.woff2) format("woff2");
 }

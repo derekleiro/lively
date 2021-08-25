@@ -23,7 +23,7 @@ import todo_complete_icon from "../../../assets/icons/todo_complete.png";
 import goal_icon from "../../../assets/icons/goal.png";
 import goal_icon_light from "../../../assets/icons/goal_light.png";
 
-import completed_sound from "../../../assets/sounds/for-sure.webm";
+import completed_sound from "../../../assets/sounds/for-sure.ogg";
 
 import Step from "./Step";
 import {
@@ -50,14 +50,9 @@ import {
 	task_complete_timeout,
 	task_complete_timeout_reset,
 } from "../../../actions/timeouts";
-import add_session from "../../../util/session";
-import { session_add } from "../../../util/session_add";
-import {
-	edit_timer_feed,
-	edit_timer_feed_today,
-	edit_timer_feed_week,
-	reset_timer_feed,
-} from "../../../actions/timer_feed";
+import add_month from "../../../util/add_month";
+import { stats_add } from "../../../util/stats_add";
+import { reset_timer_feed } from "../../../actions/timer_feed";
 import {
 	remove_notification,
 	schedule_notification,
@@ -70,7 +65,7 @@ const sound = new Howl({
 	src: [completed_sound],
 	html5: true,
 	preload: true,
-	format: ["webm"],
+	format: ["ogg"],
 });
 
 const TextBar = (props) => {
@@ -96,10 +91,6 @@ const TextBar = (props) => {
 		(state) => state.todo_important_set
 	);
 	const switch_to_add = useSelector((state) => state.addfeed_switch);
-	const timer_feed = useSelector((state) => state.timer_feed);
-
-	const month = moment(new Date()).format("MMMM");
-	const year = moment(new Date()).format("yyyy");
 
 	const completedTask = todo_complete_set_state;
 	const starred = todo_important_set_state;
@@ -129,40 +120,72 @@ const TextBar = (props) => {
 		dispatch(todo_steps({ text: "", id: generateURL(), complete: 0 }));
 	};
 
-	const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-	const randomInRange = (min, max) => {
-		return Math.random() * (max - min) + min;
+	const style = {
+		style1: {
+			color: darkMode ? "white" : "black",
+			border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
+			background: "transparent",
+			height: "30px",
+			maxHeight: "300px",
+			width: "auto",
+			outline: "0",
+			fontFamily: `"Poppins", sans-serif`,
+			padding: "7.5px 40px 7.5px 15px",
+			overflow: "auto",
+			borderRadius: "35px",
+		},
+		style2: {
+			color: darkMode ? "white" : "black",
+			border: darkMode ? "solid 1px  #1A1A1A" : "solid 1px #f0f0f0",
+			background: "transparent",
+			height: "auto",
+			maxHeight: "250px",
+			width: "auto",
+			outline: "0",
+			fontFamily: `"Poppins", sans-serif`,
+			padding: "7.5px 40px 7.5px 15px",
+			overflow: "auto",
+			borderRadius: "35px",
+		},
 	};
 
 	const celebration = {
 		wohoo: () => {
-			let count = 0;
-			const interval = setInterval(() => {
-				const particleCount = 50;
+			const count = 200;
+			const defaults = {
+				origin: { y: 0.7 },
+			};
+
+			const fire = (particleRatio, opts) => {
 				confetti(
-					Object.assign({}, defaults, {
-						particleCount,
-						origin: {
-							x: randomInRange(0.1, 0.3),
-							y: Math.random() - 0.2,
-						},
+					Object.assign({}, defaults, opts, {
+						particleCount: Math.floor(count * particleRatio),
 					})
 				);
-				confetti(
-					Object.assign({}, defaults, {
-						particleCount,
-						origin: {
-							x: randomInRange(0.7, 0.9),
-							y: Math.random() - 0.2,
-						},
-					})
-				);
-				count = count + 1;
-				if (count >= 3) {
-					clearInterval(interval);
-				}
-			}, 333);
+			};
+
+			fire(0.25, {
+				spread: 26,
+				startVelocity: 55,
+			});
+			fire(0.2, {
+				spread: 60,
+			});
+			fire(0.35, {
+				spread: 100,
+				decay: 0.91,
+				scalar: 0.8,
+			});
+			fire(0.1, {
+				spread: 120,
+				startVelocity: 25,
+				decay: 0.92,
+				scalar: 1.2,
+			});
+			fire(0.1, {
+				spread: 120,
+				startVelocity: 45,
+			});
 		},
 	};
 
@@ -238,17 +261,6 @@ const TextBar = (props) => {
 					return todo.todo_url === url;
 				})
 				.modify((todo) => {
-					const data = {
-						month,
-						year,
-						createdAt: new Date(),
-						totalFocus: 0,
-						tasksFocus: 0,
-						goalsFocus: 0,
-						completedGoals: 0,
-						completedTasks: -1,
-					};
-
 					if (back_index === "home" && home_todos.length !== 0) {
 						dispatch(
 							todo_edit({
@@ -258,37 +270,18 @@ const TextBar = (props) => {
 						);
 					}
 
-					add_session(data);
-					session_add({
+					add_month(new Date());
+					stats_add({
+						date: new Date(),
 						tasks: 0,
 						goals: 0,
 						total: 0,
 						todos_count: -1,
 						goals_count: 0,
+						tag: null,
 					});
 
-					if (timer_feed.length !== 0) {
-						const exists = timer_feed.filter(
-							(time) => time.month === month && time.year === year
-						);
-
-						if (exists.length !== 0) {
-							dispatch(edit_timer_feed(data));
-						} else {
-							dispatch(reset_timer_feed);
-						}
-					}
-
-					const data_ = {
-						tasks: -1,
-						goals: 0,
-						totalFocus: 0,
-						tasksFocus: 0,
-						goalsFocus: 0,
-					};
-
-					dispatch(edit_timer_feed_today(data_));
-					dispatch(edit_timer_feed_week(data_));
+					dispatch(reset_timer_feed);
 
 					if (todo.remindMe) {
 						schedule_notification(
@@ -339,48 +332,19 @@ const TextBar = (props) => {
 						);
 					}
 
-					const data = {
-						month,
-						year,
-						createdAt: new Date(),
-						totalFocus: 0,
-						tasksFocus: 0,
-						goalsFocus: 0,
-						completedGoals: 0,
-						completedTasks: 1,
-					};
+					add_month(new Date());
 
-					add_session(data);
-
-					session_add({
+					stats_add({
+						date: new Date(),
 						tasks: 0,
 						goals: 0,
 						total: 0,
 						todos_count: 1,
 						goals_count: 0,
+						tag: null,
 					});
 
-					if (timer_feed.length !== 0) {
-						const exists = timer_feed.filter(
-							(time) => time.month === month && time.year === year
-						);
-						if (exists.length !== 0) {
-							dispatch(edit_timer_feed(data));
-						} else {
-							dispatch(reset_timer_feed);
-						}
-					}
-
-					const data_ = {
-						tasks: 1,
-						goals: 0,
-						totalFocus: 0,
-						tasksFocus: 0,
-						goalsFocus: 0,
-					};
-
-					dispatch(edit_timer_feed_today(data_));
-					dispatch(edit_timer_feed_week(data_));
+					dispatch(reset_timer_feed);
 
 					remove_notification(todo.index);
 
@@ -510,8 +474,11 @@ const TextBar = (props) => {
 
 	return (
 		<div className="text_bar">
-			<div className="card">
-				<div className="card-completed">
+			<div className="card" style={{ display: "flex", margin: "35px 0" }}>
+				<div
+					className="card-completed"
+					style={{ flex: 0, marginRight: "10px" }}
+				>
 					<img
 						onClick={
 							task_complete ||
@@ -535,7 +502,11 @@ const TextBar = (props) => {
 						style={{ width: "22.5px", height: "22.5px" }}
 					/>
 				</div>
-				<div className="card-content" onClick={checked ? null : editInput}>
+				<div
+					className="card-content"
+					style={{ flex: 9, margin: "0 7.5px" }}
+					onClick={checked ? null : editInput}
+				>
 					{switch_state ? (
 						<div
 							className="card-desc"
@@ -557,6 +528,18 @@ const TextBar = (props) => {
 								color: darkMode ? "white" : "black",
 								fontSize: "16px",
 								height: "auto",
+								outline: 0,
+								boxShadow: 0,
+								border: 0,
+								width: "100%",
+								maxWidth: "100%",
+								minWidth: "100%",
+								background: "transparent",
+								fontFamily: `"Poppins", sans-serif`,
+								marginTop: 0,
+								maxHeight: "250px",
+								resize: " none",
+								borderRadius: 0,
 							}}
 							onChange={handleInput}
 							defaultValue={text}
@@ -569,12 +552,24 @@ const TextBar = (props) => {
 							<img
 								src={darkMode ? edit_complete_light : edit_complete}
 								alt="edit task"
+								style={{
+									width: "20px",
+									marginTop: "2px",
+									verticalAlign: "middle",
+									height: "20px",
+								}}
 								onClick={saveInput}
 							></img>
 						) : (
 							<img
 								src={starred ? star_active : darkMode ? star_light : star}
 								alt="Important task"
+								style={{
+									width: "20px",
+									marginTop: "2px",
+									verticalAlign: "middle",
+									height: "20px",
+								}}
 								onClick={important_complete ? null : handleImportantCheck}
 							></img>
 						)}
@@ -585,6 +580,12 @@ const TextBar = (props) => {
 							<img
 								src={darkMode ? edit_complete_light : edit_complete}
 								alt="edit task"
+								style={{
+									width: "20px",
+									marginTop: "2px",
+									verticalAlign: "middle",
+									height: "20px",
+								}}
 								onClick={saveInput}
 							></img>
 						) : null}

@@ -7,8 +7,8 @@ android {
         applicationId "com.lively.life"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 13
-        versionName "2.00"
+        versionCode 15
+        versionName "3.00"
     }
     buildTypes {
         release {
@@ -25,7 +25,8 @@ repositories {
 }
 
 dependencies {
-    def billing_version = "3.0.2"
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'
+    def billing_version = "3.0.3"
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"

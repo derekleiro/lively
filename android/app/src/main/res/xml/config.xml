@@ -2,12 +2,8 @@
 <widget version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
   <access origin="*" />
   
-  <feature name="Permissions">
-    <param name="android-package" value="com.android.plugins.Permissions"/>
-  </feature>
-
-  <feature name="DarkMode">
-    <param name="android-package" value="com.openmove.darkmode.DarkMode"/>
+  <feature name="DatePickerPlugin">
+    <param name="android-package" value="com.plugin.datepicker.DatePickerPlugin"/>
   </feature>
 
   <feature name="Notification">
@@ -18,8 +14,12 @@
     <param name="android-package" value="cordova.plugins.DozeOptimize.DozeOptimize"/>
   </feature>
 
-  <feature name="NativeStorage">
-    <param name="android-package" value="NativeStorage"/>
+  <feature name="EmailComposer">
+    <param name="android-package" value="de.appplant.cordova.emailcomposer.EmailComposer"/>
+  </feature>
+
+  <feature name="MusicControls">
+    <param name="android-package" value="com.homerours.musiccontrols.MusicControls"/>
   </feature>
 
   <feature name="InAppBillingPlugin">

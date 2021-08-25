@@ -1,3 +1,11 @@
+export const show_thanks_modal = {
+    type: "SHOW_THANKS_MODAL",
+};
+
+export const remove_thanks_modal = {
+    type: "REMOVE_THANKS_MODAL",
+};
+
 export const show_donation_modal = {
     type: "SHOW_DONATION_MODAL",
 };
@@ -39,4 +47,18 @@ export const activate_bnav_limit = {
 
 export const reset_bnav_limit = {
     type: "RESET_LIMIT",
+};
+
+export const set_lang = (data) => {
+    return {
+        type: "SET_LANG",
+        payload: data,
+    };
+};
+
+export const set_name = (data) => {
+    return {
+        type: "SET_NAME",
+        payload: data,
+    };
 };

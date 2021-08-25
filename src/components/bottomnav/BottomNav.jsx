@@ -1,12 +1,18 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import moment from "moment";
+import { Plugins } from "@capacitor/core";
 import Dexie from "dexie";
 
 import "./bottom-nav.css";
 
 import { mode } from "../../constants/color";
+import {
+	get_today,
+	get_yesterday,
+	get_week,
+	get_month,
+} from "../../util/stats";
 
 import home from "../../assets/icons/home.png";
 import lists from "../../assets/icons/lists.png";
@@ -37,13 +43,7 @@ import {
 	textarea_state,
 } from "../../actions/add_feed";
 
-import {
-	most_focused,
-	timer_feed,
-	timer_feed_today,
-	timer_feed_week,
-	chart_data as chart_data_dispatch,
-} from "../../actions/timer_feed";
+import { timer_feed } from "../../actions/timer_feed";
 import {
 	dispatch_lists,
 	dispatch_list_completed,
@@ -53,6 +53,8 @@ import {
 import { home_timeout_clear } from "../../actions/timeouts";
 
 const BottomNav = (props) => {
+	const { Keyboard } = Plugins;
+
 	const dispatch = useDispatch();
 
 	const state = useSelector((state) => state.bottom_nav);
@@ -60,7 +62,6 @@ const BottomNav = (props) => {
 	const lists_feed = useSelector((state) => state.lists_feed.lists);
 	const list_toggle = useSelector((state) => state.list_toggle);
 	const my_goals_state = useSelector((state) => state.goals.goals);
-	const chart_data_state = useSelector((state) => state.chart_data);
 	const my__completed_goals_state = useSelector(
 		(state) => state.completed_goals.completed
 	);
@@ -69,12 +70,14 @@ const BottomNav = (props) => {
 		(state) => state.bottom_nav_limit_state
 	);
 	const tip_state = useSelector((state) => state.tip_state);
+	const timer_feed_title = useSelector((state) => state.timer_feed_title);
 
-	const today_timestamp = Date.parse(localStorage.getItem("today_timestamp"));
-	const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
+	const [keyboardUp, setKeyboardUp] = useState(false)
 
-	const new_focus = JSON.parse(localStorage.getItem("new_focus"));
-	const new_focus_week = JSON.parse(localStorage.getItem("new_focus_week"));
+	const logDB = new Dexie("LivelyLogs");
+	logDB.version(1).stores({
+		logs: "date, tasks, goals, total, todos_count, graph, goals_count",
+	});
 
 	const todoDB = new Dexie("LivelyTodos");
 	todoDB.version(1).stores({
@@ -86,9 +89,9 @@ const BottomNav = (props) => {
 		goals: `goal_url,title,desc,steps,notes,focustime,tag,tag_id,deadline,date_completed,goal_url,complete`,
 	});
 
-	const timerDB = new Dexie("LivelyTime");
-	timerDB.version(1).stores({
-		times: "id, months, today, week",
+	const monthDB = new Dexie("LivelyMonths");
+	monthDB.version(1).stores({
+		month: "date",
 	});
 
 	const listDB = new Dexie("LivelyLists");
@@ -100,59 +103,6 @@ const BottomNav = (props) => {
 	tagDB.version(1).stores({
 		tags: `id,total_focus,today,week,month`,
 	});
-
-	const readableTime = (time) => {
-		const hours = Math.floor(time / 3600);
-		const minutes = Math.floor(time / 60);
-
-		if (minutes === 1) {
-			return `${minutes} mins`;
-		} else if (minutes < 1) {
-			return `N/A`;
-		} else if (minutes < 60 && minutes > 1) {
-			return `${minutes} mins`;
-		} else if (time % 3600 === 0) {
-			if (time > 3600) {
-				return `${hours} h`;
-			} else if (time === 3600) {
-				return `${hours} h`;
-			}
-		} else if (minutes > 60 && minutes < 120) {
-			return `${hours} h ${minutes % 60} mins`;
-		} else {
-			return `${hours} h ${minutes % 60 !== 0 ? ` ${minutes % 60} mins` : ``}`;
-		}
-	};
-
-	const setTime = (timestamp) => {
-		const now = moment();
-
-		if (
-			now.diff(timestamp, "days") >= 1 &&
-			!moment(timestamp).calendar().includes("Yesterday")
-		) {
-			return "Earlier";
-		} else if (moment(timestamp).calendar().includes("Yesterday")) {
-			return "Yesterday";
-		} else if (moment(timestamp).calendar().includes("Today")) {
-			return "Today";
-		} else if (moment(timestamp).calendar().includes("Tomorrow")) {
-			return "Tomorrow";
-		} else {
-			return "Later";
-		}
-	};
-
-	const setTimeWeek = (timestamp) => {
-		const now = moment();
-		const days_passed = now.diff(timestamp, "days");
-
-		if (days_passed >= 0 && days_passed <= 7) {
-			return true;
-		} else {
-			return false;
-		}
-	};
 
 	const cleanup = () => {
 		if (tasks.length > 25) {
@@ -268,233 +218,32 @@ const BottomNav = (props) => {
 		},
 		timer: () => {
 			cleanup();
-			const get_months = async () => {
-				const my_feed_data = await timerDB.times.toArray();
-
-				if (my_feed_data.length !== 0) {
-					dispatch(timer_feed(my_feed_data[0].months));
-				}
-			};
-
-			const get_today = async () => {
-				const data = await timerDB.times
-					.where("id")
-					.equals("Today_DB")
-					.toArray();
-
-				if (data.length !== 0) {
-					if (setTime(data[0].today.timestamp) === "Today") {
-						dispatch(
-							timer_feed_today({
-								tasks: data[0].today.todos_count,
-								goals: data[0].today.goals_count,
-								totalFocus: data[0].today.total,
-								tasksFocus: data[0].today.tasks,
-								goalsFocus: data[0].today.goals,
-								timestamp: data[0].today.timestamp,
-							})
-						);
-					}
-				}
-			};
-
-			const get_week = async () => {
-				const data = await timerDB.times
-					.where("id")
-					.equals("Week_DB")
-					.toArray();
-
-				if (data.length !== 0) {
-					if (setTimeWeek(data[0].week.timestamp)) {
-						dispatch(
-							timer_feed_week({
-								tasks: data[0].week.todos_count,
-								goals: data[0].week.goals_count,
-								totalFocus: data[0].week.total,
-								tasksFocus: data[0].week.tasks,
-								goalsFocus: data[0].week.goals,
-								timestamp: data[0].week.timestamp,
-							})
-						);
-					}
-				}
-			};
-
-			const chart_data = async () => {
-				const tags = await tagDB.tags.toArray();
-				const tags_today = tags.sort((tagA, tagB) => {
-					return tagB.today.focused - tagA.today.focused;
-				});
-				const tags_week = tags.sort((tagA, tagB) => {
-					return tagB.week.focused - tagA.week.focused;
-				});
-
-				let chart_data_today = {
-					labels: [],
-					values: [],
-					ids: [],
-				};
-
-				let chart_data_week = {
-					labels: [],
-					values: [],
-					ids: [],
-				};
-
-				let for_largest_today = {
-					labels: [],
-					values: [],
-					ids: [],
-				};
-
-				let for_largest_week = {
-					labels: [],
-					values: [],
-					ids: [],
-				};
-
-				const dispatch_item = (tag) => {
-					chart_data_today.labels.push(
-						`${tag.name} : (${readableTime(tag.today.focused)})`
-					);
-					chart_data_today.values.push(tag.today.focused / 60);
-					chart_data_today.ids.push(tag.id);
-				};
-
-				const dispatch_item_week = (tag) => {
-					chart_data_week.labels.push(
-						`${tag.name} : (${readableTime(tag.week.focused)})`
-					);
-					chart_data_week.values.push(tag.week.focused / 60);
-					chart_data_week.ids.push(tag.id);
-				};
-
-				for (let i = 0; i < tags_today.length; i++) {
-					if (tags_today.length < 6) {
-						dispatch_item(tags_today[i]);
-					} else {
-						if (i < 5) {
-							dispatch_item(tags_today[i]);
-						} else {
-							chart_data_today.labels.push("Others");
-
-							const new_list = tags_today.slice(5, tags_today.length + 1);
-							chart_data_today.values.push(
-								new_list.reduce((a, b) => a + b.today.focused / 60, 0)
-							);
-							chart_data_today.ids.push("others");
-							break;
+			if (timer_feed_state.dispatch === false) {
+				if (timer_feed_title === "Today") {
+					get_today().then((today_state) => {
+						if (today_state) {
+							dispatch(timer_feed(today_state));
 						}
-					}
-				}
-
-				for (let i = 0; i < tags_week.length; i++) {
-					if (tags_week.length < 6) {
-						dispatch_item_week(tags_week[i]);
-					} else {
-						if (i < 5) {
-							dispatch_item_week(tags_week[i]);
-						} else {
-							chart_data_week.labels.push("Others");
-
-							const new_list = tags_week.slice(5, tags_week.length + 1);
-							chart_data_week.values.push(
-								new_list.reduce((a, b) => a + b.week.focused / 60, 0)
-							);
-							chart_data_week.ids.push("others");
-							break;
+					});
+				} else if (timer_feed_title === "Yesterday") {
+					get_yesterday().then((yesterday_state) => {
+						if (yesterday_state) {
+							dispatch(timer_feed(yesterday_state));
 						}
-					}
-				}
-
-				tags.forEach((tag) => {
-					for_largest_today.labels.push(tag.name);
-					for_largest_today.values.push(tag.today.focused / 60);
-					for_largest_today.ids.push(tag.id);
-
-					for_largest_week.labels.push(tag.name);
-					for_largest_week.values.push(tag.week.focused / 60);
-					for_largest_week.ids.push(tag.id);
-				});
-
-				const get_today = () => {
-					const largest = Math.max(...for_largest_today.values);
-					const index = for_largest_today.values.findIndex(
-						(val) => val === largest
-					);
-
-					return {
-						name: for_largest_today.labels[index],
-						id: for_largest_today.ids[index],
-					};
-				};
-
-				const get_week = () => {
-					const largest = Math.max(...for_largest_week.values);
-					const index = for_largest_week.values.findIndex(
-						(val) => val === largest
-					);
-
-					return {
-						name: for_largest_week.labels[index],
-						id: for_largest_week.ids[index],
-					};
-				};
-
-				const most_focused_today = get_today();
-				const most_focused_week = get_week();
-
-				dispatch(
-					most_focused({
-						today: {
-							name: most_focused_today.name,
-							id: most_focused_today.id,
-						},
-						week: {
-							name: most_focused_week.name,
-							id: most_focused_week.id,
-						},
-					})
-				);
-
-				if (setTime(today_timestamp) === "Today" && new_focus) {
-					dispatch(
-						chart_data_dispatch({
-							today: chart_data_today,
-						})
-					);
+					});
+				} else if (timer_feed_title === "Past 7 days") {
+					get_week().then((past_7_days) => {
+						if (past_7_days) {
+							dispatch(timer_feed(past_7_days));
+						}
+					});
 				} else {
-					dispatch(
-						chart_data_dispatch({
-							today: null,
-						})
-					);
+					get_month(timer_feed_title).then((month_state) => {
+						if (month_state) {
+							dispatch(timer_feed(month_state));
+						}
+					});
 				}
-
-				if (setTimeWeek(week_timestamp) && new_focus_week) {
-					dispatch(
-						chart_data_dispatch({
-							week: chart_data_week,
-						})
-					);
-				} else {
-					dispatch(
-						chart_data_dispatch({
-							week: null,
-						})
-					);
-				}
-			};
-
-			if (
-				chart_data_state.today === null ||
-				chart_data_state.week === null ||
-				timer_feed_state.length === 0
-			) {
-				get_months();
-				get_today();
-				get_week();
-				chart_data();
 			}
 		},
 	};
@@ -505,6 +254,7 @@ const BottomNav = (props) => {
 			style={{
 				backgroundColor: props.darkMode ? `${mode.dark}` : `${mode.light}`,
 				color: props.darkMode ? "white" : "black",
+				zIndex: keyboardUp ? "-1" : "5",
 			}}
 		>
 			<span className="bottom-nav-image-holder">
@@ -608,6 +358,7 @@ const BottomNav = (props) => {
 			style={{
 				backgroundColor: props.darkMode ? `${mode.dark}` : `${mode.light}`,
 				color: props.darkMode ? "white" : "black",
+				zIndex: keyboardUp ? "-1" : "5",
 			}}
 		>
 			<span className="bottom-nav-image-holder">
@@ -689,10 +440,23 @@ const BottomNav = (props) => {
 			GET.lists();
 		} else if (state === "goals") {
 			GET.goals();
-		} else if (state === "timer") {
-			GET.timer();
 		}
 	}, [state]);
+
+	useEffect(() => {
+		if (state === "timer") {
+			GET.timer();
+		}
+	}, [state, timer_feed_title]);
+
+	useEffect(() => {
+		Keyboard.addListener("keyboardDidShow", () => setKeyboardUp(true));
+		Keyboard.addListener("keyboardDidHide", () => setKeyboardUp(false));
+
+		return () => {
+			Keyboard.removeAllListeners();
+		};
+	}, []);
 
 	return <>{bottom_nav_limit_state ? static_jsx : link_jsx}</>;
 };

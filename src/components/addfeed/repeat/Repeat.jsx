@@ -27,7 +27,7 @@ const Repeat = () => {
     });
 
     const [selecting, setSelecting] = useState(false);
-    const [selected, setSelected] = useState(todo_repeat_option_state);
+    const [selected, setSelected] = useState(todo_repeat_option_state || "Never");
 
     const style = {
         style1: {

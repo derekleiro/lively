@@ -1,52 +1,40 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Link, useHistory } from "react-router-dom";
+import { Link } from "react-router-dom";
+import Dexie from "dexie";
 import moment from "moment";
 
 import "./timer-feed.css";
 
 import { mode } from "../../constants/color";
-import Month from "./month/Month";
-import Done from "../done/Done";
 
-import focus_icon from "../../assets/icons/focus.png";
-import loading from "../../assets/icons/loading.gif";
 import toggleDown from "../../assets/icons/expand.png";
 import toggleDownLight from "../../assets/icons/expand_light.png";
 
-import toggleUp from "../../assets/icons/collapse.png";
-import toggleUpLight from "../../assets/icons/collapse_light.png";
-
-import tag from "../../assets/icons/tag.png";
+import tag_icon from "../../assets/icons/tag.png";
 import tag_light from "../../assets/icons/tag_light.png";
 
-import { add_focus_timeout } from "../../actions/timeouts";
-import Today from "./today/Today";
-import Week from "./week/Week";
-import {
-	clear_chart_data,
-	toggle_today,
-	toggle_week,
-} from "../../actions/timer_feed";
+import { add_focus_timeout, reset_focus_timeout } from "../../actions/timeouts";
+import { reset_timer_feed, timer_feed_title } from "../../actions/timer_feed";
 import Graph from "./graph/Graph";
+import Loading from "../loading/Loading";
+import Done from "../done/Done";
+import Stats from "./stats/Stats";
+import ThankYou from "../../pages/thank_you/ThankYou";
 
 const TimerFeed = () => {
 	const dispatch = useDispatch();
-	const history = useHistory()
 
 	const darkMode = useSelector((state) => state.dark_mode);
+	const thanks_state = useSelector((state) => state.thanks);
 	const focus_timeout = useSelector((state) => state.focus_timeout);
-	const timer_feed_today = useSelector((state) => state.timer_feed_today);
-	const timer_feed_week = useSelector((state) => state.timer_feed_week);
-	const toggle_state = useSelector((state) => state.toggle);
-	const most_focused_state = useSelector((state) => state.most_focused);
-	const chart_data_state = useSelector((state) => state.chart_data);
+	const timer_feed_state = useSelector((state) => state.timer_feed);
+	const title = useSelector((state) => state.timer_feed_title);
 
-	const my_feed = useSelector((state) => state.timer_feed).sort(
-		(timeA, timeB) => {
-			return timeB.createdAt - timeA.createdAt;
-		}
-	);
+	const [showToggle, setShowToggle] = useState(false);
+	const [tag, setTag] = useState("");
+	const [showMonthsToggle, setShowMonthsToggle] = useState(false);
+	const [months_list, setMonthsList] = useState([]);
 
 	const style = {
 		topNav: {
@@ -76,46 +64,75 @@ const TimerFeed = () => {
 		},
 	};
 
+	const logDB = new Dexie("LivelyLogs");
+	logDB.version(1).stores({
+		logs: "date, tasks, goals, total, todos_count, graph, goals_count",
+	});
+
+	const monthDB = new Dexie("LivelyMonths");
+	monthDB.version(1).stores({
+		month: "date",
+	});
+
+	const handle_months_list = async () => {
+		const months = await monthDB.month.toArray();
+		const sorted_months = months.sort(
+			(month1, month2) => month2.date - month1.date
+		);
+		setMonthsList(sorted_months);
+	};
+
 	const toggle = () => {
-		if (toggle_state) {
-			dispatch(toggle_today);
-		} else {
-			dispatch(toggle_week);
-		}
+		setShowToggle(true);
+		handle_months_list();
 	};
 
-	const setTime = (timestamp) => {
-		if (moment(timestamp).calendar().includes("Today")) {
-			return "Today";
-		} else {
-			return "";
-		}
+	const readableDate = (date) => {
+		const month = moment(date).format("MMMM");
+		const year = moment(date).format("yyyy");
+
+		return `${month}, ${year}`;
 	};
 
-	const setTimeWeek = (timestamp) => {
-		const now = moment();
-		const days_passed = now.diff(timestamp, "days");
-
-		if (days_passed > 7) {
-			return false;
-		} else if (days_passed < 0) {
-			return false;
-		} else if (days_passed >= 0 && days_passed <= 7) {
-			return true;
+	const handleToday = async () => {
+		if (title !== "Today") {
+			dispatch(reset_timer_feed);
+			dispatch(reset_focus_timeout);
+			dispatch(timer_feed_title("Today"));
 		}
+
+		setShowToggle(false);
 	};
 
-	const setTimeMonth = (timestamp) => {
-		const month = moment().format("MMMM");
-		const year = moment().format("YYYY");
-		const localMonth = moment(timestamp).format("MMMM");
-		const localYear = moment(timestamp).format("YYYY");
-
-		if (month === localMonth && year === localYear) {
-			return true;
-		} else {
-			return false;
+	const handleYesterday = async () => {
+		if (title !== "Yesterday") {
+			dispatch(reset_timer_feed);
+			dispatch(reset_focus_timeout);
+			dispatch(timer_feed_title("Yesterday"));
 		}
+
+		setShowToggle(false);
+	};
+
+	const handleWeek = async () => {
+		if (title !== "Past 7 days") {
+			dispatch(reset_timer_feed);
+			dispatch(reset_focus_timeout);
+			dispatch(timer_feed_title("Past 7 days"));
+		}
+
+		setShowToggle(false);
+	};
+
+	const handleMonth = (month) => {
+		if (title !== readableDate(month)) {
+			dispatch(reset_timer_feed);
+			dispatch(reset_focus_timeout);
+			dispatch(timer_feed_title(readableDate(month)));
+		}
+
+		setShowToggle(false);
+		setShowMonthsToggle(false);
 	};
 
 	useEffect(() => {
@@ -125,58 +142,38 @@ const TimerFeed = () => {
 				clearTimeout(timeout);
 			}, 1500);
 		}
+	}, [focus_timeout]);
 
-		const check_timestamps = () => {
-			const today_timestamp = Date.parse(
-				localStorage.getItem("today_timestamp")
+	useEffect(() => {
+		let unmounted = false;
+		var num = [23, 34, 56, 72, 1, 22];
+		Math.max(...num);
+
+		if (timer_feed_state.graph && !unmounted) {
+			const longest_time = Math.max(...timer_feed_state.graph.times);
+			const longest_time_index = timer_feed_state.graph.times.findIndex(
+				(longest) => longest_time === longest
 			);
-			const week_timestamp = Date.parse(localStorage.getItem("week_timestamp"));
-			const month_timestamp = Date.parse(
-				localStorage.getItem("month_timestamp")
-			);
+			setTag(timer_feed_state.graph.labels[longest_time_index]);
+		} else {
+			setTag("");
+		}
 
-			if (setTime(today_timestamp) !== "Today") {
-				localStorage.setItem("new_focus", false);
-				dispatch(clear_chart_data);
-			}
-
-			if (!setTimeWeek(week_timestamp)) {
-				localStorage.setItem("new_focus_week", false);
-				dispatch(clear_chart_data);
-			}
-
-			if (!setTimeMonth(month_timestamp)) {
-				localStorage.setItem("new_focus", false);
-				localStorage.setItem("new_focus_week", false);
-				dispatch(clear_chart_data);
-			}
+		return () => {
+			unmounted = true;
 		};
-
-		check_timestamps();
-	}, []);
+	}, [timer_feed_state]);
 
 	return (
 		<div className="container">
 			<div className="container_top_nav" style={style.topNav}>
 				<div className="title" style={style.title}>
-					{toggle_state ? "Last 7 days" : "Today"}
+					{title}
 					<span>
 						<img
-							src={
-								darkMode
-									? toggle_state
-										? toggleUpLight
-										: toggleDownLight
-									: toggle_state
-									? toggleUp
-									: toggleDown
-							}
+							src={darkMode ? toggleDownLight : toggleDown}
 							style={style.imgStyle}
-							alt={
-								toggle_state
-									? "Switch to see Today's stats"
-									: "Switch to view this Week's stats"
-							}
+							alt={"Your stats"}
 							onClick={toggle}
 						/>
 					</span>
@@ -188,110 +185,116 @@ const TimerFeed = () => {
 
 			<div className="space" style={{ marginTop: "90px" }}></div>
 
-			{focus_timeout === 0 ? (
-				<Done load={true}>
-					<div className="done_options">
-						<img
-							style={{ width: "35px", height: "35px" }}
-							src={loading}
-							alt="Loading your tasks"
-						/>
+			{thanks_state && <ThankYou />}
+
+			{showToggle ? (
+				<Done
+					exit={true}
+					handleClick={() => {
+						setShowMonthsToggle(false);
+						setShowToggle(false);
+					}}
+					load={true}
+					extra={true}
+				>
+					<div className="done_options" style={{ fontSize: "16px" }}>
+						<div className="done_text" onClick={handleToday}>
+							Today
+						</div>
+						<div className="done_text" onClick={handleYesterday}>
+							Yesterday
+						</div>
+						<div className="done_text" onClick={handleWeek}>
+							Past 7 days
+						</div>
+						<div
+							className="done_text"
+							onClick={() => {
+								setShowMonthsToggle(true);
+								setShowToggle(false);
+							}}
+						>
+							Select Month
+						</div>
 					</div>
 				</Done>
+			) : null}
+
+			{showMonthsToggle ? (
+				<Done
+					exit={true}
+					handleClick={() => {
+						setShowMonthsToggle(false);
+						setShowToggle(true);
+					}}
+					load={true}
+					extra={true}
+				>
+					<div className="done_options" style={{ fontSize: "16px" }}>
+						{months_list.length === 0 && (
+							<div className="done_text">No month data available</div>
+						)}
+						{months_list.map((month, index) => {
+							return (
+								<div
+									key={index}
+									className="done_text"
+									onClick={() => handleMonth(month.date)}
+								>
+									{readableDate(month.date)}
+								</div>
+							);
+						})}
+					</div>
+				</Done>
+			) : null}
+
+			{focus_timeout === 0 ? (
+				<Loading />
 			) : (
 				<>
-					{toggle_state ? (
+					<Stats
+						tasks={timer_feed_state.tasks_count}
+						goals={timer_feed_state.goals_count}
+						totalFocus={timer_feed_state.total}
+						tasksFocus={timer_feed_state.tasks}
+						goalsFocus={timer_feed_state.goals}
+						tag={tag}
+					/>
+					{timer_feed_state.graph ? (
 						<>
-							<Week
-								tasks={timer_feed_week.tasks}
-								goals={timer_feed_week.goals}
-								totalFocus={timer_feed_week.totalFocus}
-								tasksFocus={timer_feed_week.tasksFocus}
-								goalsFocus={timer_feed_week.goalsFocus}
-								timestamp={timer_feed_week.timestamp}
-								tag={
-									most_focused_state.week ? most_focused_state.week.name : ""
-								}
-							/>
-							{chart_data_state.week ? (
-								<Graph data={chart_data_state.week} />
+							{timer_feed_state.graph.times.length !== 0 &&
+							timer_feed_state.graph.labels.length !== 0 ? (
+								<Graph data={timer_feed_state.graph} />
+							) : null}
+						</>
+					) : null}
+
+					{timer_feed_state.graph ? (
+						<>
+							{timer_feed_state.graph.times.length === 0 &&
+							timer_feed_state.graph.labels.length === 0 ? (
+								<div className="tip">
+									<span>Tip: To get graph data, focus on a tag </span>
+									<span>
+										<img src={darkMode ? tag_light : tag_icon} alt="tag icon" />
+									</span>
+								</div>
 							) : null}
 						</>
 					) : (
-						<>
-							<Today
-								tasks={timer_feed_today.tasks}
-								goals={timer_feed_today.goals}
-								totalFocus={timer_feed_today.totalFocus}
-								tasksFocus={timer_feed_today.tasksFocus}
-								goalsFocus={timer_feed_today.goalsFocus}
-								timestamp={timer_feed_today.timestamp}
-								tag={
-									most_focused_state.today ? most_focused_state.today.name : ""
-								}
-							/>
-							{chart_data_state.today ? (
-								<Graph data={chart_data_state.today} />
-							) : null}
-						</>
-					)}
-
-					{toggle_state ? (
-						!chart_data_state.week ? (
-							<div className="tip">
-								<span>Tip: To get graph data, focus on a tag </span>
-								<span>
-									<img src={darkMode ? tag_light : tag} alt="tag icon" />
-								</span>
-							</div>
-						) : null
-					) : !chart_data_state.today ? (
 						<div className="tip">
 							<span>Tip: To get graph data, focus on a tag </span>
 							<span>
-								<img src={darkMode ? tag_light : tag} alt="tag icon" />
+								<img src={darkMode ? tag_light : tag_icon} alt="tag icon" />
 							</span>
 						</div>
-					) : null}
-
-					<hr
-						style={{
-							borderTop: 0,
-							border: darkMode
-								? "1px solid rgb(30, 30, 30)"
-								: "1px solid rgb(240, 240, 240)",
-						}}
-					/>
-
-					{my_feed.map((data, index) => {
-						return (
-							<div key={index}>
-								<Month
-									month={data.month}
-									goalsFocus={data.goalsFocus}
-									completedGoals={data.completedGoals}
-									tasksFocus={data.tasksFocus}
-									completedTasks={data.completedTasks}
-									year={data.year}
-									focusTime={data.totalFocus}
-								/>
-							</div>
-						);
-					})}
+					)}
 				</>
 			)}
-
-			{my_feed.length === 0 ? (
-				<div className="done_alt">
-					<div className="done_options">
-						<img src={focus_icon} alt="Focus on your targets!" />
-
-						<div className="done_text">
-							Start focusing towards a better life!
-						</div>
-					</div>
-				</div>
-			) : null}
+			<Link to="/log">
+				<div className="log-time-btn">+ Log time</div>
+			</Link>
 		</div>
 	);
 };

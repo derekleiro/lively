@@ -18,6 +18,8 @@ import todo_complete_icon from "../../../assets/icons/todo_complete.png";
 
 import checked_icon from "../../../assets/icons/edit_complete.png";
 import checked_light from "../../../assets/icons/edit_complete_light.png";
+import todo_complete_light from "../../../assets/icons/completed_light.png";
+import todo_complete_dark from "../../../assets/icons/completed.png";
 
 import repeat_icon from "../../../assets/icons/repeat.png";
 import repeat_light from "../../../assets/icons/repeat_light.png";
@@ -29,6 +31,9 @@ import tag_icon from "../../../assets/icons/tag.png";
 import tag_light from "../../../assets/icons/tag_light.png";
 import due_icon from "../../../assets/icons/due.png";
 import due_light from "../../../assets/icons/due_light.png";
+
+import focused_for_icon from "../../../assets/icons/timer.png";
+import focused_for_icon_light from "../../../assets/icons/timer_light.png";
 
 import {
 	todo_desc,
@@ -56,8 +61,8 @@ import {
 } from "../../../actions/add_feed";
 import { focus_info } from "../../../actions/focus_feed";
 
-import completed_sound from "../../../assets/sounds/for-sure.webm";
-import add_session from "../../../util/session";
+import completed_sound from "../../../assets/sounds/for-sure.ogg";
+import add_month from "../../../util/add_month";
 import repeat from "../../../util/repeat";
 import {
 	list_task_complete,
@@ -65,12 +70,7 @@ import {
 	list_task_important,
 	append_list_tasks,
 } from "../../../actions/list_feed";
-import {
-	edit_timer_feed,
-	edit_timer_feed_today,
-	edit_timer_feed_week,
-	reset_timer_feed,
-} from "../../../actions/timer_feed";
+import { reset_timer_feed } from "../../../actions/timer_feed";
 import {
 	remove_notification,
 	schedule_notification,
@@ -84,7 +84,7 @@ import {
 	important_complete_timeout_reset,
 	home_timeout_clear,
 } from "../../../actions/timeouts";
-import { session_add } from "../../../util/session_add";
+import { stats_add } from "../../../util/stats_add";
 import {
 	set_list_complete,
 	set_list_important,
@@ -95,46 +95,49 @@ const sound = new Howl({
 	src: [completed_sound],
 	html5: true,
 	preload: true,
-	format: ["webm"],
+	format: ["ogg"],
 });
 
 const Card = (props) => {
 	const { Toast } = Plugins;
 
-	const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-	const randomInRange = (min, max) => {
-		return Math.random() * (max - min) + min;
-	};
-
 	const celebration = {
 		wohoo: () => {
-			let count = 0;
-			const interval = setInterval(() => {
-				const particleCount = 50;
+			const count = 200;
+			const defaults = {
+				origin: { y: 0.7 },
+			};
+
+			const fire = (particleRatio, opts) => {
 				confetti(
-					Object.assign({}, defaults, {
-						particleCount,
-						origin: {
-							x: randomInRange(0.1, 0.3),
-							y: Math.random() - 0.2,
-						},
+					Object.assign({}, defaults, opts, {
+						particleCount: Math.floor(count * particleRatio),
 					})
 				);
-				confetti(
-					Object.assign({}, defaults, {
-						particleCount,
-						origin: {
-							x: randomInRange(0.7, 0.9),
-							y: Math.random() - 0.2,
-						},
-					})
-				);
-				count = count + 1;
-				if (count >= 3) {
-					clearInterval(interval);
-				}
-			}, 333);
+			};
+
+			fire(0.25, {
+				spread: 26,
+				startVelocity: 55,
+			});
+			fire(0.2, {
+				spread: 60,
+			});
+			fire(0.35, {
+				spread: 100,
+				decay: 0.91,
+				scalar: 0.8,
+			});
+			fire(0.1, {
+				spread: 120,
+				startVelocity: 25,
+				decay: 0.92,
+				scalar: 1.2,
+			});
+			fire(0.1, {
+				spread: 120,
+				startVelocity: 45,
+			});
 		},
 	};
 
@@ -166,11 +169,7 @@ const Card = (props) => {
 		}
 	};
 
-	const month = moment(new Date()).format("MMMM");
-	const year = moment(new Date()).format("yyyy");
-
 	const darkMode = useSelector((state) => state.dark_mode);
-	const timer_feed = useSelector((state) => state.timer_feed);
 
 	const task_complete = useSelector((state) => state.task_complete);
 	const important_complete = useSelector((state) => state.important_complete);
@@ -202,11 +201,7 @@ const Card = (props) => {
 		} else if (minutes < 60 && minutes > 1) {
 			return `${minutes} mins`;
 		} else if (time % 3600 === 0) {
-			if (time > 3600) {
-				return `${hours} h`;
-			} else if (time === 3600) {
-				return `${hours} h`;
-			}
+			return `${hours} h`;
 		} else if (minutes > 60 && minutes < 120) {
 			return `${hours} h ${minutes % 60} mins`;
 		} else {
@@ -222,14 +217,12 @@ const Card = (props) => {
 		if (props.listView) {
 			dispatch(todos_clear);
 			dispatch(home_timeout_clear);
-		}else{
+		} else {
 			dispatch(navStateHome);
 		}
 
 		if (checked) {
 			if (props.listView) {
-				setChecked(false);
-			} else {
 				setChecked(false);
 			}
 
@@ -239,49 +232,19 @@ const Card = (props) => {
 				dueDate: props.dueDate,
 			};
 
-			const data = {
-				month,
-				year,
-				createdAt: new Date(),
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-				completedGoals: 0,
-				completedTasks: -1,
-			};
+			add_month(new Date());
 
-			add_session(data);
-
-			session_add({
+			stats_add({
+				date: new Date(),
 				tasks: 0,
 				goals: 0,
 				total: 0,
 				todos_count: -1,
 				goals_count: 0,
+				tag: null,
 			});
 
-			if (timer_feed.length !== 0) {
-				const exists = timer_feed.filter(
-					(time) => time.month === month && time.year === year
-				);
-
-				if (exists.length !== 0) {
-					dispatch(edit_timer_feed(data));
-				} else {
-					dispatch(reset_timer_feed);
-				}
-			}
-
-			const data_ = {
-				tasks: -1,
-				goals: 0,
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-			};
-
-			dispatch(edit_timer_feed_today(data_));
-			dispatch(edit_timer_feed_week(data_));
+			dispatch(reset_timer_feed);
 
 			await db.todos
 				.filter((todo) => {
@@ -316,17 +279,6 @@ const Card = (props) => {
 				todo_url: props.URL,
 				complete: 1,
 				dueDate: props.dueDate,
-			};
-
-			const data = {
-				month,
-				year,
-				createdAt: new Date(),
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-				completedGoals: 0,
-				completedTasks: 1,
 			};
 
 			repeat({
@@ -368,38 +320,20 @@ const Card = (props) => {
 				setChecked(false);
 			}
 
-			add_session(data);
+			add_month(new Date());
 
-			session_add({
+			stats_add({
+				date: new Date(),
 				tasks: 0,
 				goals: 0,
 				total: 0,
 				todos_count: 1,
 				goals_count: 0,
+				tag: null,
 			});
 
 			set_list_complete();
-			if (timer_feed.length !== 0) {
-				const exists = timer_feed.filter(
-					(time) => time.month === month && time.year === year
-				);
-				if (exists.length !== 0) {
-					dispatch(edit_timer_feed(data));
-				} else {
-					dispatch(reset_timer_feed);
-				}
-			}
-
-			const data_ = {
-				tasks: 1,
-				goals: 0,
-				totalFocus: 0,
-				tasksFocus: 0,
-				goalsFocus: 0,
-			};
-
-			dispatch(edit_timer_feed_today(data_));
-			dispatch(edit_timer_feed_week(data_));
+			dispatch(reset_timer_feed);
 
 			await db.todos
 				.filter((todo) => {
@@ -554,6 +488,16 @@ const Card = (props) => {
 					</div>
 
 					<div className="card-due-date">
+						{props.listView && props.date_completed ? (
+							<div className="card-due-section">
+								<img
+									className="card-info-img"
+									src={darkMode ? todo_complete_light : todo_complete_dark}
+									alt={`Task completed on ${setTime(props.date_completed)}`}
+								/>
+								{setTime(props.date_completed)}
+							</div>
+						) : null}
 						{(setTime(props.dueDate) === "Yesterday" &&
 							!props.listView &&
 							!props.urgent_state) ||
@@ -575,18 +519,18 @@ const Card = (props) => {
 						)}
 
 						{props.remindMe ? (
-							<span className="card-due-section">
+							<div className="card-due-section">
 								<img
 									className="card-info-img"
 									src={darkMode ? remind_light : remind}
 									alt={`Due By ${setTimeRemind(props.remindMe.timestamp)}`}
 								/>
 								{setTimeRemind(props.remindMe.timestamp)}
-							</span>
+							</div>
 						) : null}
 
 						{props.category ? (
-							<span className="card-due-section">
+							<div className="card-due-section">
 								<span>
 									<img
 										className="card-info-img"
@@ -595,11 +539,11 @@ const Card = (props) => {
 									/>
 									{props.category}
 								</span>
-							</span>
+							</div>
 						) : null}
 
 						{props.tag ? (
-							<span className="card-due-section">
+							<div className="card-due-section">
 								<span>
 									<img
 										className="card-info-img"
@@ -608,18 +552,18 @@ const Card = (props) => {
 									/>
 									{props.tag}
 								</span>
-							</span>
+							</div>
 						) : null}
 
 						{props.repeat !== "Never" ? (
-							<span className="card-due-section">
+							<div className="card-due-section">
 								<img
 									className="card-info-img"
 									src={darkMode ? repeat_light : repeat_icon}
 									alt={`Task repeats ${props.repeat}`}
 								/>
 								{props.repeat}
-							</span>
+							</div>
 						) : null}
 					</div>
 				</Link>
@@ -657,7 +601,13 @@ const Card = (props) => {
 					)}
 
 					{props.focustime ? (
-						<>Focused : {readableTime(props.focustime)}</>
+						<span className="start_focus">
+							<img
+								src={darkMode ? focused_for_icon_light : focused_for_icon}
+								alt="Start focus"
+							/>{" "}
+							{readableTime(props.focustime)}
+						</span>
 					) : null}
 
 					{props.steps.length !== 0 ? (
@@ -670,7 +620,8 @@ const Card = (props) => {
 									}}
 								></span>
 							) : null}
-							{stepsDone} of {props.steps.length} steps
+							{stepsDone} of {props.steps.length}{" "}
+							{props.steps.length > 1 ? "Steps" : "Step"}
 						</>
 					) : null}
 
@@ -694,7 +645,7 @@ const Card = (props) => {
 					src={starred ? star_active : darkMode ? star_light : star}
 					onClick={important_complete ? null : handleImportantTaskClick}
 					alt="Important task"
-				></img>
+				/>
 			</div>
 		</div>
 	);

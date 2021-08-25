@@ -9,14 +9,17 @@ import Goal from "./goal/Goal";
 import Done from "../done/Done";
 
 import goal from "../../assets/icons/goal_color.png";
-import loading from "../../assets/icons/loading.gif";
 
 import { add_switch_goal, textarea_state } from "../../actions/add_feed";
 import { add_goal_timeout } from "../../actions/timeouts";
+import Loading from "../loading/Loading";
+import ThankYou from "../../pages/thank_you/ThankYou";
 
 const GoalsFeed = () => {
 	const dispatch = useDispatch();
+	
 	const darkMode = useSelector((state) => state.dark_mode);
+	const thanks_state = useSelector((state) => state.thanks);
 	const goal_timeout = useSelector((state) => state.goal_timeout);
 	const goals_raw = useSelector((state) => state.goals.goals);
 	const goals_normal = goals_raw.filter((goal) => !goal.deadline);
@@ -108,6 +111,8 @@ const GoalsFeed = () => {
 
 			<div className="space" style={{ marginTop: "100px" }}></div>
 
+			{thanks_state && <ThankYou />}
+
 			{goals_raw.length === 0 ? (
 				<Done>
 					<div className="done_options">
@@ -121,15 +126,7 @@ const GoalsFeed = () => {
 			) : null}
 
 			{goal_timeout === 0 ? (
-				<Done load={true}>
-					<div className="done_options">
-						<img
-							style={{ width: "35px", height: "35px" }}
-							src={loading}
-							alt="Loading your goals"
-						/>
-					</div>
-				</Done>
+				<Loading />
 			) : (
 				<>
 					{my_goals_deadline.map((goal, index) => {
@@ -138,13 +135,9 @@ const GoalsFeed = () => {
 								<Goal
 									goal_title={goal.title}
 									goal_desc={goal.desc}
-									notes={
-										goal.notes.notes ? goal.notes.notes : []
-									}
+									notes={goal.notes.notes ? goal.notes.notes : []}
 									focustime={goal.focustime}
-									steps={
-										goal.steps.steps ? goal.steps.steps : []
-									}
+									steps={goal.steps.steps ? goal.steps.steps : []}
 									URL={goal.goal_url}
 									complete={goal.complete}
 									completedView={false}
@@ -162,13 +155,9 @@ const GoalsFeed = () => {
 								<Goal
 									goal_title={goal.title}
 									goal_desc={goal.desc}
-									notes={
-										goal.notes.notes ? goal.notes.notes : []
-									}
+									notes={goal.notes.notes ? goal.notes.notes : []}
 									focustime={goal.focustime}
-									steps={
-										goal.steps.steps ? goal.steps.steps : []
-									}
+									steps={goal.steps.steps ? goal.steps.steps : []}
 									URL={goal.goal_url}
 									complete={goal.complete}
 									completedView={false}

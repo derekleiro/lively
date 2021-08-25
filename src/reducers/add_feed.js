@@ -370,6 +370,8 @@ export const AddGoalsReducer = (state = { goals: [] }, action) => {
 					(goal) => goal.goal_url !== action.payload.goal_url
 				),
 			});
+		case "HANDLE_GOALS_CLEAR":
+			return (state = { goals: [] });
 
 		default:
 			return state;
@@ -653,9 +655,18 @@ export const TodoIndexReducer = (state = null, action) => {
 	}
 };
 
-export const BackIndexReducer = (state = "/", action) => {
+export const BackIndexReducer = (state = "home", action) => {
 	switch (action.type) {
 		case "HANDLE_BACK_INDEX":
+			return (state = action.payload);
+		default:
+			return state;
+	}
+};
+
+export const AddTaskListReducer = (state = false, action) => {
+	switch (action.type) {
+		case "HANDLE_ADD_TASK_LIST":
 			return (state = action.payload);
 		default:
 			return state;

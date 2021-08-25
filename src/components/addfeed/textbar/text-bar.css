@@ -52,6 +52,7 @@
     resize: none;
     border-radius: 35px;
     color: black;
+    resize: none;
 }
 
 .text_bar_step_textarea{

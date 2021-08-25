@@ -288,7 +288,7 @@ const Step = (props) => {
 		<div className="card">
 			<div className="card-completed">
 				<img
-					onClick={handleCompletedClick}
+					onClick={text ? handleCompletedClick : null}
 					src={
 						checked
 							? todo_complete_icon

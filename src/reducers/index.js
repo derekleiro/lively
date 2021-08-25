@@ -32,20 +32,14 @@ import {
 	DateCompletedReducer,
 	UrgencyReducer,
 	AddFeedDeadlineReducer,
+	AddTaskListReducer,
 } from "./add_feed";
 import {
 	FocusDoneReducer,
 	FocusInfoReducer,
 	FocusTimeSetReducer,
 } from "./focus_feed";
-import {
-	ChartDataReducer,
-	MostFocusedReducer,
-	TimerFeedReducer,
-	TimerFeedTodayReducer,
-	TimerFeedWeekReducer,
-	ToggleReducer,
-} from "./timer_feed";
+import { TimerFeedReducer, TimerFeedStateReducer } from "./timer_feed";
 import {
 	ListCompleted,
 	ListDefault,
@@ -87,7 +81,10 @@ import {
 	DonationItemsReducer,
 	DonationMemberReducer,
 	DonationReducer,
+	LangReducer,
 	LimitBottomNavReducer,
+	NameReducer,
+	ThankYouStateReducer,
 } from "./home_feed";
 
 const allReducers = combineReducers({
@@ -138,14 +135,9 @@ const allReducers = combineReducers({
 	collapse_today: TodayCollapseReducer,
 	collapse_tomorrow: TomorrowCollapseReducer,
 	collapse_later: LaterCollapseReducer,
-	timer_feed_today: TimerFeedTodayReducer,
-	timer_feed_week: TimerFeedWeekReducer,
-	toggle: ToggleReducer,
 	important_complete: ImportantCompleteTimeoutReducer,
 	task_complete: TaskCompleteTimeoutReducer,
 	goal_complete: GoalCompleteTimeoutReducer,
-	most_focused: MostFocusedReducer,
-	chart_data: ChartDataReducer,
 	goal_index: GoalBackIndexReducer,
 	completed_goals_timeout: CompletedGoalsTimeoutReducer,
 	home_height: HomeHeightReducer,
@@ -163,7 +155,12 @@ const allReducers = combineReducers({
 	bottom_nav_limit_state: LimitBottomNavReducer,
 	date_completed: DateCompletedReducer,
 	task_urgency_state: UrgencyReducer,
-	goal_deadline: AddFeedDeadlineReducer
+	goal_deadline: AddFeedDeadlineReducer,
+	lang: LangReducer,
+	name: NameReducer,
+	timer_feed_title: TimerFeedStateReducer,
+	add_task_list: AddTaskListReducer,
+	thanks: ThankYouStateReducer,
 });
 
 export default allReducers;

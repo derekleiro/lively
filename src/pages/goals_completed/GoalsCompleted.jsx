@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import LazyLoad from "react-lazyload";
 
 import "./goals-completed.css";
 
@@ -9,45 +8,43 @@ import { navStateGoals } from "../../actions/bottom_nav";
 import { mode } from "../../constants/color";
 
 const GoalsCompleted = () => {
-    const dispatch = useDispatch();
-    const darkMode = useSelector((state) => state.dark_mode);
+	const dispatch = useDispatch();
+	const darkMode = useSelector((state) => state.dark_mode);
 
-    const [fade, setFade] = useState(false);
-    const style = {
-        position: "fixed",
-        height: "100%",
-        width: "100%",
-        top: "0",
-        zIndex: "10",
-        backgroundColor: darkMode ? mode.dark : mode.light,
-        overflow: "auto",
-        opacity: fade ? 1 : 0,
-    };
+	const [fade, setFade] = useState(false);
+	const style = {
+		position: "fixed",
+		height: "100%",
+		width: "100%",
+		top: "0",
+		zIndex: "10",
+		backgroundColor: darkMode ? mode.dark : mode.light,
+		overflow: "auto",
+		opacity: fade ? 1 : 0,
+	};
 
-    useEffect(() => {
-        let unmounted = false;
+	useEffect(() => {
+		let unmounted = false;
 
-        setTimeout(() => {
-            if (!unmounted) {
-                setFade(true);
-            }
-        }, 50);
+		setTimeout(() => {
+			if (!unmounted) {
+				setFade(true);
+			}
+		}, 50);
 
-        window.scrollTo(0, 0);
-        dispatch(navStateGoals);
+		window.scrollTo(0, 0);
+		dispatch(navStateGoals);
 
-        return () => {
-            unmounted = true;
-        };
-    }, [dispatch]);
+		return () => {
+			unmounted = true;
+		};
+	}, [dispatch]);
 
-    return (
-        <div className="page" style={style}>
-            <LazyLoad>
-                <GoalsCompletedFeed />
-            </LazyLoad>
-        </div>
-    );
+	return (
+		<div className="page" style={style}>
+			<GoalsCompletedFeed />
+		</div>
+	);
 };
 
 export default GoalsCompleted;

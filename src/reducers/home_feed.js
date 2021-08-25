@@ -1,3 +1,14 @@
+export const ThankYouStateReducer = (state = false, action) => {
+    switch (action.type) {
+        case "SHOW_THANKS_MODAL":
+            return (state = true);
+        case "REMOVE_THANKS_MODAL":
+            return (state = false);
+        default:
+            return state;
+    }
+};
+
 export const DonationReducer = (state = 0, action) => {
     switch (action.type) {
         case "SHOW_DONATION_MODAL":
@@ -51,6 +62,24 @@ export const LimitBottomNavReducer = (state = 0, action) => {
             return (state = state + 1);
         case "RESET_LIMIT":
             return (state = 0);
+        default:
+            return state;
+    }
+};
+
+export const LangReducer = (state = null, action) => {
+    switch (action.type) {
+        case "SET_LANG":
+            return (state = action.payload);
+        default:
+            return state;
+    }
+};
+
+export const NameReducer = (state = "", action) => {
+    switch (action.type) {
+        case "SET_NAME":
+            return (state = action.payload);
         default:
             return state;
     }

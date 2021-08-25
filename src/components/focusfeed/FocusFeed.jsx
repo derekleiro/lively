@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useHistory } from "react-router-dom";
+import { Plugins } from "@capacitor/core";
+import moment from "moment";
 
 import "./focus-feed.css";
 
@@ -9,6 +11,7 @@ import back_icon_light from "../../assets/icons/back_light.png";
 import tag from "../../assets/icons/tag.png";
 import tag_light from "../../assets/icons/tag_light.png";
 import tip_icon from "../../assets/icons/tip.png";
+import keep_going_icon from "../../assets/icons/keep_going.png";
 
 import Target from "./target/Target";
 import { mode } from "../../constants/color";
@@ -25,22 +28,26 @@ import Tag from "../tag/Tag";
 import { todo_tag_selected } from "../../actions/add_feed";
 
 const FocusFeed = () => {
+	const { Storage } = Plugins;
+
 	const dispatch = useDispatch();
 	const history = useHistory();
 	const darkMode = useSelector((state) => state.dark_mode);
 	const timeSetRaw = useSelector((state) => state.focus_time_set);
 	const focus_info_state = useSelector((state) => state.focus_info);
+	const name_state = useSelector((state) => state.name);
 	const todo_tag_selected_value = useSelector((state) =>
 		state.todo_tag_selected ? state.todo_tag_selected.tag : null
 	);
 
-	const focus_ongoing = localStorage.getItem("focus");
-	const data = JSON.parse(focus_ongoing);
-
+	const [data, setData] = useState(null);
+	const [prepModalOn, setPrepModalOn] = useState(false);
 	const [timerOn, setTimerOn] = useState(false);
 	const [timeSet, setTimeSet] = useState(timeSetRaw);
 	const [localData, setLocalData] = useState(null);
 	const [warningOn, setWarningOn] = useState(false);
+	const [aboutToQuit, setAboutToQuit] = useState(false);
+	const [encouragementOpen, setEncouragementOpen] = useState(false);
 
 	const style = {
 		light: {
@@ -55,50 +62,124 @@ const FocusFeed = () => {
 		},
 	};
 
-	const startFocus = () => {
+	const startFocus = async () => {
 		setTimerOn(true);
 		setWarningOn(false);
-		localStorage.setItem("focus", JSON.stringify(localData));
-		localStorage.setItem("extra_data", JSON.stringify(localData));
+		setPrepModalOn(false);
+
+		const modified_data = {
+			time: focus_info_state.time,
+			event_time: moment(new Date()).add(focus_info_state.time, "s").toDate(),
+			type: focus_info_state ? focus_info_state.type || null : null,
+			steps: focus_info_state ? focus_info_state.steps || [] : [],
+			text: focus_info_state ? focus_info_state.text || "" : "",
+			extra: focus_info_state ? focus_info_state.extra || "" : "",
+			focustime: focus_info_state ? focus_info_state.focustime || 0 : 0,
+			url: focus_info_state ? focus_info_state.url || null : null,
+			tag: focus_info_state ? focus_info_state.tag : null,
+			tag_id: focus_info_state ? focus_info_state.tag_id : null,
+		};
+
+		dispatch(focus_info(modified_data));
+		if (modified_data) {
+			setLocalData(modified_data);
+		}
+
+		await Storage.set({ key: "focus", value: JSON.stringify(modified_data) });
+		await Storage.set({
+			key: "extra_data",
+			value: JSON.stringify(modified_data),
+		});
 	};
 
 	const handleFocus = () => {
 		if (todo_tag_selected_value || focus_info_state.type) {
-			startFocus();
+			setPrepModalOn(true);
 		} else {
 			setWarningOn(true);
 		}
 	};
 
-	const handleSelect = (selected, data) => {
-		dispatch(focus_info(data));
-		setLocalData(data);
+	const handleSelect = (data_) => {
+		dispatch(focus_info(data_));
+		setLocalData(data_);
 		setTimeSet(true);
 	};
 
 	const handleTimeSet = () => {
 		setTimeSet(false);
+		setAboutToQuit(false);
+	};
+
+	const handleBack = () => {
+		if (!timeSet || !timerOn) {
+			if (focus_info_state) {
+				if (focus_info_state.type === "task") {
+					history.replace("/");
+				} else if (focus_info_state.type === "goal") {
+					history.replace("/goals");
+				} else {
+					history.replace("/timer");
+				}
+			} else {
+				history.replace("/timer");
+			}
+		} else {
+			setAboutToQuit(true);
+		}
+	};
+
+	const remove_focus_local = async () => {
+		await Storage.remove({ key: "focus" });
+		await Storage.remove({ key: "extra_data" });
+	};
+
+	const readableTime = (time) => {
+		const hours = Math.floor(time / 3600);
+		const minutes = Math.floor(time / 60);
+
+		if (minutes === 1) {
+			return `${minutes} mins`;
+		} else if (minutes < 1) {
+			return `Less than a minute`;
+		} else if (minutes < 60 && minutes > 1) {
+			return `${minutes} mins`;
+		} else if (time % 3600 === 0) {
+			return `${hours} h`;
+		} else if (minutes > 60 && minutes < 120) {
+			return `${hours} h ${minutes % 60} mins`;
+		} else {
+			return `${hours} h ${minutes % 60 !== 0 ? ` ${minutes % 60} mins` : ``}`;
+		}
 	};
 
 	useEffect(() => {
 		let unmounted = false;
 
-		if (data) {
-			if (!unmounted) {
-				setTimerOn(true);
-				setTimeSet(true);
+		const fetchData = async () => {
+			const focus_ongoing = await Storage.get({ key: "focus" });
+			const focus_data = JSON.parse(focus_ongoing.value);
+
+			if (focus_data) {
+				if (!unmounted) {
+					setData(focus_data);
+					setTimerOn(true);
+					setTimeSet(true);
+				}
 			}
-		}
+		};
+
+		fetchData();
 
 		return () => {
+			remove_focus_local();
 			dispatch(focus_timeSET(null));
 			dispatch(clear_focus);
 			dispatch(focus_done(false));
-			localStorage.removeItem("focus");
-			localStorage.removeItem("extra_data");
 			dispatch(todo_tag_selected({ tag: null, id: null }));
+			unmounted = true;
 		};
-	}, [dispatch]);
+	}, []);
 
 	const focus_centered = (
 		<Done>
@@ -110,7 +191,10 @@ const FocusFeed = () => {
 						steps={focus_info_state ? focus_info_state.steps : null}
 						left={false}
 					/>
-					<CountDown handleTimeSet={handleTimeSet} />
+					<CountDown
+						dataLocal={data ? data : localData}
+						handleTimeSet={handleTimeSet}
+					/>
 				</span>
 			</div>
 		</Done>
@@ -124,7 +208,10 @@ const FocusFeed = () => {
 				steps={focus_info_state ? focus_info_state.steps : null}
 				left={true}
 			/>
-			<CountDown handleTimeSet={handleTimeSet} />
+			<CountDown
+				dataLocal={data ? data : localData}
+				handleTimeSet={handleTimeSet}
+			/>
 		</div>
 	);
 
@@ -138,25 +225,21 @@ const FocusFeed = () => {
 					<img
 						src={darkMode ? back_icon_light : back_icon}
 						alt="Go back"
-						onClick={() => {
-							if (focus_info_state) {
-								if (focus_info_state.type === "task") {
-									history.replace("/");
-								} else if (focus_info_state.type === "goal") {
-									history.replace("/goals");
-								} else {
-									history.replace("/timer");
-								}
-							} else {
-								history.replace("/timer");
-							}
-						}}
+						onClick={handleBack}
 					/>
 				</span>
 				<span className="title" style={darkMode ? style.light : style.dark}>
 					Focus
 				</span>
-				<div id="create_todo">
+				<div
+					style={{
+						position: "absolute",
+						right: "20px",
+						color: "#1395ff",
+						marginTop: "-25px",
+						fontSize: "14px",
+					}}
+				>
 					{timeSet ? (
 						<span
 							style={{ color: "#1395ff" }}
@@ -171,6 +254,42 @@ const FocusFeed = () => {
 			</div>
 
 			<div className="space" style={{ marginTop: "75px" }}></div>
+
+			{prepModalOn ? (
+				<Done load={true}>
+					<div className="done_options">
+						<img src={tip_icon} alt="No tag selected" />
+						<div className="done_text">
+							You are about to start a focus session of{" "}
+							{readableTime(localData.time)}. Please make sure you are free of
+							destructions for the next {readableTime(localData.time)}. Once you
+							start the session, it cannot be paused. Find a destruction free
+							area and keep your phone on "Do Not Disturb" . All the best!
+						</div>
+
+						<div
+							className="action_button"
+							style={{
+								margin: "15px 30px",
+								color: "#1395ff",
+							}}
+							onClick={startFocus}
+						>
+							I am free of destructions and ready to focus
+						</div>
+						<div
+							className="action_button"
+							style={{
+								margin: "15px 30px",
+								color: "#1395ff",
+							}}
+							onClick={() => setPrepModalOn(false)}
+						>
+							go back
+						</div>
+					</div>
+				</Done>
+			) : null}
 
 			{warningOn ? (
 				<Done load={true}>
@@ -192,7 +311,10 @@ const FocusFeed = () => {
 								margin: "15px 30px",
 								color: "#1395ff",
 							}}
-							onClick={() => startFocus()}
+							onClick={() => {
+								setWarningOn(false);
+								setPrepModalOn(true);
+							}}
 						>
 							Yeah, I'm just relaxing
 						</div>
@@ -206,6 +328,88 @@ const FocusFeed = () => {
 						>
 							No, I want the time added on the graph!
 						</div>
+					</div>
+				</Done>
+			) : null}
+
+			{aboutToQuit && timerOn ? (
+				<Done load={true}>
+					<div className="done_options">
+						<img src={keep_going_icon} alt="No tag selected" />
+
+						{encouragementOpen ? (
+							<>
+								<div className="done_text">
+									You've done great {name_state}! Your willingness to sit down
+									and focus shows you're ready to achieve your goals. Keep it
+									up!
+								</div>{" "}
+								<div
+									className="action_button"
+									style={{
+										margin: "15px 30px",
+										color: "#1395ff",
+									}}
+									onClick={() => {
+										setAboutToQuit(false);
+									}}
+								>
+									No, I can do this!
+								</div>
+								<div
+									className="action_button"
+									style={{
+										margin: "15px 30px",
+										color: "#1395ff",
+									}}
+									onClick={() => {
+										setAboutToQuit(false);
+										if (focus_info_state) {
+											if (focus_info_state.type === "task") {
+												history.replace("/");
+											} else if (focus_info_state.type === "goal") {
+												history.replace("/goals");
+											} else {
+												history.replace("/timer");
+											}
+										} else {
+											history.replace("/timer");
+										}
+									}}
+								>
+									Thanks
+								</div>
+							</>
+						) : (
+							<>
+								<div className="done_text">
+									It can be hard sometimes to maintain focus, and that's ok. You
+									can do this {name_state}, let's keep going!
+								</div>
+								<div
+									className="action_button"
+									style={{
+										margin: "15px 30px",
+										color: "#1395ff",
+									}}
+									onClick={() => setAboutToQuit(false)}
+								>
+									Let's keep going!
+								</div>
+								<div
+									className="action_button"
+									style={{
+										margin: "15px 30px",
+										color: "#1395ff",
+									}}
+									onClick={() => {
+										setEncouragementOpen(true);
+									}}
+								>
+									I've done my best!
+								</div>{" "}
+							</>
+						)}
 					</div>
 				</Done>
 			) : null}
@@ -236,7 +440,6 @@ const FocusFeed = () => {
 									style={{
 										marginBottom: "15px",
 										marginLeft: "5px",
-										color: "#1395ff",
 									}}
 								>
 									<img
@@ -245,6 +448,7 @@ const FocusFeed = () => {
 											width: "20px",
 											height: "20px",
 											verticalAlign: "middle",
+											marginRight: "10px",
 										}}
 										alt="tag icon"
 									/>{" "}

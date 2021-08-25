@@ -26,10 +26,11 @@ export const schedule_notification = async (
 			await LocalNotifications.schedule({
 				notifications: [
 					{
-						title: `Due ${moment(timestamp_raw).format("LT")}`,
+						title: `${moment(timestamp_raw).format("LT")}`,
 						body: `${desc}`,
 						id: index,
-						schedule: { at: timestamp_raw },
+						schedule: { at: timestamp_raw, allowWhenIdle: true },
+						ongoing: true,
 						sound: null,
 						attachments: null,
 						actionTypeId: "REMINDER",
@@ -43,10 +44,11 @@ export const schedule_notification = async (
 		await LocalNotifications.schedule({
 			notifications: [
 				{
-					title: `Due ${moment(timestamp_raw).format("LT")}`,
+					title: `${moment(timestamp_raw).format("LT")}`,
 					body: `${desc}`,
 					id: index,
-					schedule: { at: timestamp_raw },
+					schedule: { at: timestamp_raw, allowWhenIdle: true },
+					ongoing: true,
 					sound: null,
 					attachments: null,
 					actionTypeId: "REMINDER",

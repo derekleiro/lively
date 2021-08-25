@@ -4,10 +4,8 @@ import { Route, Switch, useHistory } from "react-router-dom";
 import { Plugins } from "@capacitor/core";
 import { isPlatform } from "@ionic/react";
 import Dexie from "dexie";
-import moment from "moment";
-import { Howl } from "howler";
-import confetti from "canvas-confetti";
 import { InAppPurchase2 as Store } from "@ionic-native/in-app-purchase-2";
+import loadable from "@loadable/component";
 
 import "./assets/fonts/fonts.css";
 import "./App.css";
@@ -18,121 +16,72 @@ import { setLightMode, setDarkMode } from "./actions/dark_mode";
 import { focus_info, focus_timeSET } from "./actions/focus_feed";
 
 import {
+	back_index,
+	add_switch_add,
+	add_switch_goal,
+	add_switch_add_update,
 	todo_desc,
-	todo_list_selected,
 	todo_due_date,
+	todo_list_selected,
+	todo_tag_selected,
+	dispatch_todo_steps,
 	todo_remind_timestamp,
+	dispatch_todo_notes,
 	todo_repeat_option,
 	todo_complete_set,
 	todo_important_set,
 	textarea_state,
 	handle_focustime,
-	dispatch_todo_steps,
-	dispatch_todo_notes,
-	add_switch_add_update,
-	handle_url,
-	todos,
 	todo_index,
-	back_index,
-	todo_tag_selected,
-	add_switch_add,
-	add_switch_goal,
-	dispatch_notif,
+	handle_url,
+	handle_date_completed,
+	set_urgency,
 } from "./actions/add_feed";
 
-import Focus from "./pages/Focus/Focus";
-import Settings from "./pages/settings/Settings";
-import ListView from "./pages/listView/ListView";
-import Add from "./pages/add/Add";
-import Fireworks from "./pages/congrats/Fireworks";
-import BottomNav from "./components/bottomnav/BottomNav";
-import Home from "./pages/home/Home";
-import Lists from "./pages/lists/Lists";
-import Goals from "./pages/goals/Goals";
-import Timer from "./pages/timer/Timer";
-import GoalsCompleted from "./pages/goals_completed/GoalsCompleted";
-import { session_add } from "./util/session_add";
-import add_session from "./util/session";
-import repeat from "./util/repeat";
-
-import { set_list_complete } from "./util/new_default_lists";
-
-import completed_sound from "./assets/sounds/for-sure.webm";
-import { remove_notification } from "./util/notifications";
-import { encouragements } from "./constants/encouragements";
-import ThankYou from "./pages/thank_you/ThankYou";
 import {
 	dispatch_donation_items,
-	reset_battery_opt,
-	set_battery_opt,
 	set_donation_member,
+	reset_donation_member,
 	activate_bnav_limit,
 	reset_bnav_limit,
+	set_name,
+	set_lang,
+	show_thanks_modal,
 } from "./actions/home_feed";
-
-const sound = new Howl({
-	src: [completed_sound],
-	html5: true,
-	preload: true,
-	format: ["webm"],
-});
+import Loading from "./components/loading/Loading";
+import { stats_add } from "./util/stats_add";
+import add_month from "./util/add_month";
 
 const App = () => {
-	const { LocalNotifications, Toast, NavigationBar, SplashScreen } = Plugins;
+	const { LocalNotifications, Toast, SplashScreen, Storage, NavigationBar } =
+		Plugins;
 
-	const DONATION_IDS = [
-		"1_donation",
-		"3_donation",
-		"10_donation",
-		"30_donation",
-		"100_donation",
-		"2_member",
-	];
+	const Home = loadable(async () => import("./pages/home/Home"));
+	const BottomNav = loadable(async () =>
+		import("./components/bottomnav/BottomNav")
+	);
+	const Settings = loadable(async () => import("./pages/settings/Settings"));
+	const ThankYou = loadable(async () => import("./pages/thank_you/ThankYou"));
+	const Import = loadable(async () => import("./pages/settings/Import"));
+	const Export = loadable(async () => import("./pages/settings/Export"));
+	const Fireworks = loadable(async () => import("./pages/congrats/Fireworks"));
+	const Lists = loadable(async () => import("./pages/lists/Lists"));
+	const Add = loadable(async () => import("./pages/add/Add"));
+	const Goals = loadable(async () => import("./pages/goals/Goals"));
+	const GoalsCompleted = loadable(async () =>
+		import("./pages/goals_completed/GoalsCompleted")
+	);
+	const Timer = loadable(async () => import("./pages/timer/Timer"));
+	const Focus = loadable(async () => import("./pages/Focus/Focus"));
+	const ListView = loadable(async () => import("./pages/listView/ListView"));
+	const LogTime = loadable(async () => import("./pages/log_time/LogTime"));
+
+	const DONATION_IDS = ["2_member", "3_donation", "100_donation"];
 
 	const dispatch = useDispatch();
 	const history = useHistory();
 
 	const darkMode = useSelector((state) => state.dark_mode);
-
-	const month = moment(new Date()).format("MMMM");
-	const year = moment(new Date()).format("yyyy");
-	
-	const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-	const randomInRange = (min, max) => {
-		return Math.random() * (max - min) + min;
-	};
-
-	const celebration = {
-		wohoo: () => {
-			let count = 0;
-			const interval = setInterval(() => {
-				const particleCount = 50;
-				confetti(
-					Object.assign({}, defaults, {
-						particleCount,
-						origin: {
-							x: randomInRange(0.1, 0.3),
-							y: Math.random() - 0.2,
-						},
-					})
-				);
-				confetti(
-					Object.assign({}, defaults, {
-						particleCount,
-						origin: {
-							x: randomInRange(0.7, 0.9),
-							y: Math.random() - 0.2,
-						},
-					})
-				);
-				count = count + 1;
-				if (count >= 3) {
-					clearInterval(interval);
-				}
-			}, 333);
-		},
-	};
 
 	const goalDB = new Dexie("LivelyGoals");
 	goalDB.version(1).stores({
@@ -142,6 +91,11 @@ const App = () => {
 	const todoDB = new Dexie("LivelyTodos");
 	todoDB.version(1).stores({
 		todos: `todo_url,desc,dueDate,category,tag,tag_id,steps,focustime,urgent,index,date_completed,remindMe,notes,todo_url,complete`,
+	});
+
+	const timerDB = new Dexie("LivelyTime");
+	timerDB.version(1).stores({
+		times: "id, months, today, week",
 	});
 
 	const androidLightTheme = async () => {
@@ -154,43 +108,66 @@ const App = () => {
 		window.RecentsControl.setOptions(mode.dark, "Lively");
 	};
 
-	const notify = async () => {
+	const handleEvents = async () => {
+		Store.when("product").initiated(async () => {
+			await Toast.show({
+				text: "Processing donation...",
+				duration: "long",
+				position: "bottom",
+			});
+		});
+
+		Store.when("product")
+			.approved(async (product) => {
+				await Storage.set({
+					key: "donation_modal_shown",
+					value: JSON.stringify(true),
+				});
+				await Toast.show({
+					text: "Thank you for all your support ❤",
+					duration: "long",
+					position: "bottom",
+				});
+				product.verify();
+				// dispatch(show_thanks_modal);
+			})
+			.verified((product) => {
+				product.finish();
+			});
+
+		Store.when("subscription").updated((product) => {
+			if (product.owned) {
+				dispatch(set_donation_member);
+			} else {
+				dispatch(reset_donation_member);
+			}
+		});
+	};
+
+	const notify = async (name) => {
+		const ENCOURAGEMENT = ["fun", "simple", "exciting", "easy"];
+		const random = Math.floor(Math.random() * ENCOURAGEMENT.length);
 		await LocalNotifications.schedule({
 			notifications: [
 				{
-					title: "Your dreams are awaiting!",
-					body: `Let's add a task or a goal to achieve today!`,
+					title: `Hey ${name ? name : ""}`,
+					body: `Let's get something ${ENCOURAGEMENT[random]} done today!`,
 					id: 20202019,
 					sound: null,
+					ongoing: true,
 					attachments: null,
 					actionTypeId: "PERSNOTIF",
 					extra: null,
-					autoCancel: true,
+					autoCancel: false,
 				},
 			],
 		});
 	};
 
-	const handleBatteryOptimisations = async () => {
-		window.cordova.plugins.DozeOptimize.IsIgnoringBatteryOptimizations(
-			(response) => {
-				console.log("IsIgnoringBatteryOptimizations: " + response);
-				if (response === "false") {
-					dispatch(reset_battery_opt);
-				} else {
-					dispatch(set_battery_opt);
-				}
-			},
-			(error) => {
-				console.error("IsIgnoringBatteryOptimizations Error" + error);
-			}
-		);
-	};
-
 	const registerItems = async () => {
 		Store.register({
 			id: DONATION_IDS[0],
-			type: Store.CONSUMABLE,
+			type: Store.PAID_SUBSCRIPTION,
 		});
 
 		Store.register({
@@ -203,22 +180,35 @@ const App = () => {
 			type: Store.CONSUMABLE,
 		});
 
-		Store.register({
-			id: DONATION_IDS[3],
-			type: Store.CONSUMABLE,
-		});
-
-		Store.register({
-			id: DONATION_IDS[4],
-			type: Store.CONSUMABLE,
-		});
-
-		Store.register({
-			id: DONATION_IDS[5],
-			type: Store.PAID_SUBSCRIPTION,
-		});
-
 		Store.refresh();
+	};
+
+	const registerAppStart = async () => {
+		const app_starts_raw = await Storage.get({ key: "app_starts" });
+		const app_starts = JSON.parse(app_starts_raw.value);
+		const value = app_starts ? app_starts + 1 : 1;
+		await Storage.set({
+			key: "app_starts",
+			value: JSON.stringify(value),
+		});
+	};
+
+	const addDays = (date, days) => {
+		let result = new Date(date);
+		result.setDate(result.getDate() + days);
+		return result;
+	};
+
+	const dispatchLangAndName = async () => {
+		const name_raw = await Storage.get({ key: "name" });
+		const name_value = JSON.parse(name_raw.value);
+		dispatch(set_name(name_value));
+
+		const lang_raw = await Storage.get({ key: "lang" });
+		const lang_value = JSON.parse(lang_raw.value);
+		dispatch(set_lang(lang_value));
+
+		return { name: name_value, lang: lang_value };
 	};
 
 	useEffect(() => {
@@ -229,110 +219,158 @@ const App = () => {
 		});
 
 		if (isPlatform("android") || isPlatform("ios")) {
-			Store.when(DONATION_IDS[5]).owned((p) => {
-				dispatch(set_donation_member);
+			handleEvents();
+		}
+
+		dispatchLangAndName().then((response) => {
+			notify(response.name);
+		});
+
+		registerAppStart();
+	}, []);
+
+	const persist = async () => {
+		return (await navigator.storage) && navigator.storage.persist
+			? navigator.storage.persist()
+			: undefined;
+	};
+
+	const registerNotifActions = async () => {
+		await LocalNotifications.requestPermission().then(async () => {
+			if (isPlatform("android") || isPlatform("ios")) {
+				LocalNotifications.registerActionTypes({
+					types: [
+						{
+							id: "REMINDER",
+							actions: [
+								{
+									id: "focus",
+									title: "Start focus",
+								},
+							],
+						},
+						{
+							id: "PERSNOTIF",
+							actions: [
+								{
+									id: "create_task",
+									title: "Add task",
+								},
+								{
+									id: "create_goal",
+									title: "Add goal",
+								},
+							],
+						},
+					],
+				});
+			}
+		});
+	};
+
+	// ! To be removed on version 3.01
+	const handleTransfer = async () => {
+		const months = await timerDB.times
+			.where("id")
+			.equals("Months_DB")
+			.toArray();
+
+		if (months.length !== 0) {
+			months[0].months.forEach((month) => {
+				add_month(month.createdAt);
+				stats_add({
+					date: month.createdAt,
+					tasks: month.tasksFocus,
+					goals: month.goalsFocus,
+					total: month.totalFocus,
+					todos_count: month.completedTasks,
+					goals_count: month.completedGoals,
+					tag: null,
+				});
 			});
 		}
 
-		notify();
-
-		const app_starts = JSON.parse(localStorage.getItem("app_starts"));
-		localStorage.setItem("app_starts", app_starts ? app_starts + 1 : 1);
-	}, []);
+		timerDB.delete();
+	};
 
 	useEffect(() => {
 		const dispatchMode = async () => {
-			const localMode = localStorage.getItem("darkMode");
+			const localModeRaw = await Storage.get({ key: "darkMode" });
+			const localMode = JSON.parse(localModeRaw.value);
+			persist();
+			handleTransfer(); // ! To be removed on version 3.01
+			registerNotifActions();
 
 			if (localMode === null) {
-				await Toast.requestPermissions();
+				if (isPlatform("android") || isPlatform("ios")) {
+					await Toast.requestPermissions();
+				}
 				const timestamp_intial = new Date();
 
-				localStorage.setItem("today_timestamp", timestamp_intial);
-				localStorage.setItem("new_focus", false);
-				localStorage.setItem("week_timestamp", timestamp_intial);
-				localStorage.setItem("new_focus_week", false);
-				localStorage.setItem("month_timestamp", timestamp_intial);
-				localStorage.setItem("date_installed", timestamp_intial);
-				localStorage.setItem("todo_index", 0);
-				localStorage.setItem("notif_warning", 0);
-				localStorage.setItem("app_starts", 0);
-				localStorage.setItem("donation_modal_shown", false);
-				localStorage.setItem("rate_modal_shown", false);
-				localStorage.setItem("good_with_modal_show", false);
+				await Storage.set({
+					key: "date_installed",
+					value: JSON.stringify(timestamp_intial),
+				});
 
-				await LocalNotifications.requestPermission().then(async () => {
-					if (isPlatform("android") || isPlatform("ios")) {
-						LocalNotifications.registerActionTypes({
-							types: [
-								{
-									id: "REMINDER",
-									actions: [
-										{
-											id: "complete",
-											title: "Mark as done",
-											destructive: true,
-										},
-										{
-											id: "focus",
-											title: "Start focus",
-										},
-									],
-								},
-								{
-									id: "PERSNOTIF",
-									actions: [
-										{
-											id: "create_task",
-											title: "Add task",
-										},
-										{
-											id: "create_goal",
-											title: "Add goal",
-										},
-									],
-								},
-							],
-						});
-					}
+				await Storage.set({
+					key: "todo_index",
+					value: JSON.stringify(0),
+				});
+
+				await Storage.set({
+					key: "notif_warning",
+					value: JSON.stringify(0),
+				});
+
+				await Storage.set({
+					key: "app_starts",
+					value: JSON.stringify(0),
+				});
+
+				await Storage.set({
+					key: "donation_modal_shown",
+					value: JSON.stringify(false),
+				});
+
+				await Storage.set({
+					key: "rate_modal_shown",
+					value: JSON.stringify(false),
+				});
+
+				await Storage.set({
+					key: "good_with_modal_show",
+					value: JSON.stringify(false),
+				});
+
+				await Storage.set({
+					key: "next_donation_reminder_date",
+					value: JSON.stringify(addDays(new Date(), 3)),
 				});
 
 				if (isPlatform("android") || isPlatform("ios")) {
 					if (isPlatform("android")) {
-						window.darkmode.isDarkModeEnabled(
-							(res) => {
-								if (res === "true") {
-									dispatch(setDarkMode);
-									androidDarkTheme();
-									localStorage.setItem("darkMode", true);
-								} else {
-									dispatch(setLightMode);
-									androidLightTheme();
-									localStorage.setItem("darkMode", false);
-								}
-							},
-							(err) => {
-								console.log(err);
-							}
-						);
-					} else {
-						dispatch(setLightMode);
-						localStorage.setItem("darkMode", false);
+						androidDarkTheme();
 					}
+					dispatch(setDarkMode);
+					await Storage.set({
+						key: "darkMode",
+						value: JSON.stringify(true),
+					});
 				} else {
-					dispatch(setLightMode);
-					localStorage.setItem("darkMode", false);
+					dispatch(setDarkMode);
+					await Storage.set({
+						key: "darkMode",
+						value: JSON.stringify(true),
+					});
 				}
 			} else {
-				if (localMode === "true") {
+				if (localMode) {
 					dispatch(setDarkMode);
-
 					if (isPlatform("android")) {
 						androidDarkTheme();
 					}
 				} else {
 					dispatch(setLightMode);
-
 					if (isPlatform("android")) {
 						androidLightTheme();
 					}
@@ -341,10 +379,6 @@ const App = () => {
 		};
 
 		dispatchMode();
-		if (isPlatform("android")) {
-			handleBatteryOptimisations();
-		}
-		const focus_ongoing = JSON.parse(localStorage.getItem("focus"));
 
 		const fetch = async (data) => {
 			dispatch(focus_info(data));
@@ -356,110 +390,17 @@ const App = () => {
 			}
 		};
 
-		const dispatchTaskDetails = (todo) => {
-			dispatch(add_switch_add_update);
-			dispatch(todo_desc(todo.desc));
-			dispatch(todo_due_date(todo.dueDate));
-			dispatch(todo_list_selected(todo.category));
-			dispatch(todo_tag_selected({ tag: todo.tag, id: todo.tag_id }));
-			dispatch(dispatch_todo_steps(todo.steps.steps));
-			dispatch(todo_remind_timestamp(todo.remindMe));
-			dispatch(dispatch_todo_notes(todo.notes.notes));
-			dispatch(todo_repeat_option(todo.repeat));
-			dispatch(todo_complete_set(1));
-			dispatch(todo_important_set(todo.important));
-			dispatch(textarea_state(true));
-			dispatch(handle_focustime(todo.focustime));
-			dispatch(handle_url(todo.todo_url));
-			dispatch(todo_index(todo.index));
-			dispatch(back_index("home"));
-			dispatch(dispatch_notif);
-		};
-
 		const action = () => {
 			LocalNotifications.addListener(
 				"localNotificationActionPerformed",
 				async (data) => {
-					if (data.actionId === "complete") {
-						await todoDB.todos
-							.filter((todo) => {
-								return todo.todo_url === data.notification.extra.url;
-							})
-							.modify(async (todo) => {
-								if (todo.complete === 0) {
-									todo.complete = 1;
-									todo.date_completed = new Date();
+					const focus_ongoing_raw = await Storage.get({
+						key: "focus",
+					});
 
-									dispatch(activate_bnav_limit);
-									const data_1 = {
-										month,
-										year,
-										createdAt: new Date(),
-										totalFocus: 0,
-										tasksFocus: 0,
-										goalsFocus: 0,
-										completedGoals: 0,
-										completedTasks: 1,
-									};
+					const focus_ongoing = JSON.parse(focus_ongoing_raw.value);
 
-									repeat({
-										repeat: todo.repeat,
-										todo_url: todo.todo_url,
-										desc: todo.desc,
-										dueDate: todo.dueDate,
-										date_completed: todo.date_completed,
-										category: todo.category,
-										tag: todo.tag,
-										tag_id: todo.tag_id,
-										steps: { steps: todo.steps.steps },
-										focustime: todo.focustime,
-										index: todo.index,
-										remindMe: todo.remindMe,
-										notes: { notes: todo.notes.notes },
-										complete: todo.complete,
-										important: todo.important,
-										urgent: todo.urgent ? todo.urgent : "No",
-									}).then((data) => {
-										if (data) {
-											const dispatch_timeout = setTimeout(() => {
-												dispatch(todos(data));
-												clearTimeout(dispatch_timeout);
-											}, 500);
-										}
-									});
-
-									add_session(data_1);
-									session_add({
-										tasks: 0,
-										goals: 0,
-										total: 0,
-										todos_count: 1,
-										goals_count: 0,
-									});
-
-									remove_notification(todo.index);
-									set_list_complete();
-									dispatchTaskDetails(todo);
-
-									sound.play();
-									celebration.wohoo();
-
-									await Toast.show({
-										text:
-											encouragements[
-												Math.floor(Math.random() * encouragements.length)
-											],
-										duration: "short",
-										position: "bottom",
-									});
-
-									setTimeout(() => {
-										dispatch(reset_bnav_limit);
-										history.replace(`/add_${todo.todo_url}`);
-									}, 2500);
-								}
-							});
-					} else if (data.actionId === "create_task") {
+					if (data.actionId === "create_task") {
 						if (!focus_ongoing) {
 							dispatch(add_switch_add);
 							dispatch(back_index("home"));
@@ -474,29 +415,66 @@ const App = () => {
 					} else if (data.actionId === "focus") {
 						if (!focus_ongoing) {
 							dispatch(activate_bnav_limit);
-							await Toast.show({
-								text: "Taking you to focus in a sec...",
-								duration: "short",
-								position: "bottom",
-							});
 							dispatch(focus_info(data.notification.extra));
-							setTimeout(() => {
-								dispatch(reset_bnav_limit);
-								history.replace(`/focus_${data.notification.extra.tag_id}`);
-							}, 2500);
+							dispatch(reset_bnav_limit);
+							history.replace(`/focus_${data.notification.extra.tag_id}`);
+						}
+					} else {
+						if (data.notification.extra) {
+							dispatch(activate_bnav_limit);
+
+							const todo = await todoDB.todos
+								.filter(
+									(todo_) => todo_.todo_url === data.notification.extra.url
+								)
+								.toArray();
+
+							if (todo.length !== 0) {
+								dispatch(add_switch_add_update);
+								dispatch(todo_desc(todo[0].desc));
+								dispatch(todo_due_date(todo[0].dueDate));
+								dispatch(todo_list_selected(todo[0].category));
+								dispatch(
+									todo_tag_selected({ tag: todo[0].tag, id: todo[0].tag_id })
+								);
+								dispatch(dispatch_todo_steps(todo[0].steps.steps));
+								dispatch(todo_remind_timestamp(todo[0].remindMe));
+								dispatch(dispatch_todo_notes(todo[0].notes.notes));
+								dispatch(todo_repeat_option(todo[0].repeat));
+								dispatch(todo_complete_set(todo[0].complete));
+								dispatch(todo_important_set(todo[0].important));
+								dispatch(textarea_state(true));
+								dispatch(handle_focustime(todo[0].focustime));
+								dispatch(handle_url(todo[0].todo_url));
+								dispatch(todo_index(todo[0].index));
+								dispatch(back_index("home"));
+								dispatch(handle_date_completed(todo[0].date_completed));
+								dispatch(set_urgency(todo[0].urgent ? todo[0].urgent : "No"));
+								history.replace(`/add_${todo[0].todo_url}`);
+							}
+
+							dispatch(reset_bnav_limit);
 						}
 					}
 				}
 			);
 		};
 
-		if (focus_ongoing) {
-			fetch(focus_ongoing);
-		}
+		const checkFocusOngoing = async () => {
+			const focus_ongoing_raw = await Storage.get({
+				key: "focus",
+			});
+			const focus_ongoing = JSON.parse(focus_ongoing_raw.value);
 
+			if (focus_ongoing) {
+				fetch(focus_ongoing);
+			}
+		};
+
+		checkFocusOngoing();
 		action();
 		SplashScreen.hide();
-	}, [dispatch, darkMode]);
+	}, [darkMode]);
 
 	return (
 		<div
@@ -507,26 +485,88 @@ const App = () => {
 			}}
 		>
 			<Switch>
-				<Route path="/" exact={true} component={Home} />
-				<Route path="/settings" exact={true} component={Settings} />
-				<Route path="/lists" exact={true} component={Lists} />
-				<Route path="/add" exact={true} component={Add} />
-				<Route path="/add_:id" exact={true} component={Add} />
-				<Route path="/goal_:id" exact={true} component={Add} />
-				<Route path="/goals" exact={true} component={Goals} />
+				<Route
+					path="/"
+					exact={true}
+					component={() => <Home fallback={<Loading />} />}
+				/>
+				<Route
+					path="/settings"
+					exact={true}
+					component={() => <Settings fallback={<Loading />} />}
+				/>
+				<Route
+					path="/lists"
+					exact={true}
+					component={() => <Lists fallback={<Loading />} />}
+				/>
+				<Route
+					path="/add"
+					exact={true}
+					component={() => <Add fallback={<Loading />} />}
+				/>
+				<Route
+					path="/add_:id"
+					exact={true}
+					component={() => <Add fallback={<Loading />} />}
+				/>
+				<Route
+					path="/goal_:id"
+					exact={true}
+					component={() => <Add fallback={<Loading />} />}
+				/>
+				<Route
+					path="/goals"
+					exact={true}
+					component={() => <Goals fallback={<Loading />} />}
+				/>
 				<Route
 					path="/goals_completed"
 					exact={true}
-					component={GoalsCompleted}
+					component={() => <GoalsCompleted fallback={<Loading />} />}
 				/>
-				<Route path="/timer" exact={true} component={Timer} />
-				<Route path="/focus" exact={true} component={Focus} />
-				<Route path="/focus_:id" exact={true} component={Focus} />
-				<Route path="/list_:id" exact={true} component={ListView} />
-				<Route path="/congrats" exact={true} component={Fireworks} />
-				<Route path="/thanks" exact={true} component={ThankYou} />
+				<Route
+					path="/timer"
+					exact={true}
+					component={() => <Timer fallback={<Loading />} />}
+				/>
+				<Route
+					path="/focus"
+					exact={true}
+					component={() => <Focus fallback={<Loading />} />}
+				/>
+				<Route
+					path="/focus_:id"
+					exact={true}
+					component={() => <Focus fallback={<Loading />} />}
+				/>
+				<Route
+					path="/list_:id"
+					exact={true}
+					component={() => <ListView fallback={<Loading />} />}
+				/>
+				<Route
+					path="/congrats"
+					exact={true}
+					component={() => <Fireworks fallback={<Loading />} />}
+				/>
+				<Route
+					path="/export"
+					exact={true}
+					component={() => <Export fallback={<Loading />} />}
+				/>
+				<Route
+					path="/import"
+					exact={true}
+					component={() => <Import fallback={<Loading />} />}
+				/>
+				<Route
+					path="/log"
+					exact={true}
+					component={() => <LogTime fallback={<Loading />} />}
+				/>
 			</Switch>
-			<BottomNav darkMode={darkMode} />
+			<BottomNav fallback={<Loading />} darkMode={darkMode} />
 		</div>
 	);
 };
